@@ -74,7 +74,7 @@ fieldset {
 		<div><label>WalletAddress:</label><input type="text" class="field" value="" placeholder="walletAddress" id="walletAddress" /></div>
 		<div><label></label><input type="button" class="field" id="generator" value="check" /></div>
 		<div>
-			<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="avatar256" width="256" title="256">
+			<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="avatar192" width="192" title="192">
 			<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="avatar128" width="128" title="128">
 			<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="avatar64" width="64" title="64">
 		</div>
@@ -107,7 +107,7 @@ function requestAvatar(walletAddress) {
 				console.log(data);
 				var obj = jQuery.parseJSON(data);
 				console.log(data);
-				$("#avatar256").attr("src", obj.imageData);
+				$("#avatar192").attr("src", obj.imageData);
 				$("#avatar128").attr("src", obj.imageData);
 				$("#avatar64").attr("src", obj.imageData);
 				
