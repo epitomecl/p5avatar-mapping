@@ -30,6 +30,9 @@ fieldset {
 	display: inline;
 	float: right;
 }
+.avatar {
+	cursor: pointer;
+}
   </style>
   <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
  </head>
@@ -74,7 +77,7 @@ fieldset {
 		<div><label>WalletAddress:</label><input type="text" class="field" value="" placeholder="walletAddress" id="walletAddress" /></div>
 		<div><label></label><input type="button" class="field" id="generator" value="check" /></div>
 		<div>
-			<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="avatar192" width="192" title="192">
+			<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="avatar256" width="256" title="256">
 			<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="avatar128" width="128" title="128">
 			<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="avatar64" width="64" title="64">
 		</div>
@@ -97,6 +100,21 @@ $("#generator").on("click", function(event) {
 	requestAvatar($("#walletAddress").val());
 });
 
+$("div#avatars").on("click", "img.avatar", function(event) {
+	event.preventDefault();
+	event.stopPropagation();
+	
+	var walletAddress = $(this).prop("title");
+	var imageData = $(this).prop("src");
+	
+	console.log("click...");
+	
+	$("#avatar256").prop("src", imageData);
+	$("#avatar128").prop("src", imageData);
+	$("#avatar64").prop("src", imageData);
+	$("#walletAddress").val(walletAddress);
+});
+
 function requestAvatar(walletAddress) {
 
 	if (!addAvatar(walletAddress)) {
@@ -104,10 +122,9 @@ function requestAvatar(walletAddress) {
 			"/api/", { module: "AvatarGenerator", walletAddress: walletAddress }
 		).done(
 			function( data ) {
-				console.log(data);
 				var obj = jQuery.parseJSON(data);
-				console.log(data);
-				$("#avatar192").attr("src", obj.imageData);
+
+				$("#avatar256").attr("src", obj.imageData);
 				$("#avatar128").attr("src", obj.imageData);
 				$("#avatar64").attr("src", obj.imageData);
 				
@@ -137,7 +154,7 @@ function addAvatar(walletAddress) {
 		}); 
 		
 		if (!done) {
-			$("#avatars").append("<div style=\"display:inline;margin-right:2px;margin-bottom:2px;\"><img src=\"" + imageData +  "\" width=\"64\" title=\"" + walletAddress + "\"></div>");
+			$("#avatars").append("<div style=\"display:inline;margin-right:2px;margin-bottom:2px;\"><img src=\"" + imageData +  "\" class=\"avatar\" width=\"64\" title=\"" + walletAddress + "\"></div>");
 		}
 	}
 	
