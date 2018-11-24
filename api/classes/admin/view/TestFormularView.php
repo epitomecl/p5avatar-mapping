@@ -26,13 +26,6 @@ fieldset {
 	display: inline;
 	float: left;
 }
-.description {
-	display: inline;
-	float: right;
-}
-.avatar {
-	cursor: pointer;
-}
   </style>
   <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
  </head>
@@ -41,36 +34,23 @@ fieldset {
 <fieldset><legend>Settings</legend>
 	<div class="settings">
 		<div><label>Module:</label><select name="module" class="field">
-		<option value="AvatarGenerator">AvatarGenerator</option>
-		<option value="UserManagementLogin" disabled="disabled">UserManagementLogin</option>
-		<option value="UserManagementAutoLogin" disabled="disabled">UserManagementAutoLogin</option>
-		<option value="RequestPasswordReset" disabled="disabled">RequestPasswordReset</option>
-		<option value="SubmitPasswordReset" disabled="disabled">SubmitPasswordReset</option>
-		<option value="UserManagementLogout" disabled="disabled">UserManagementLogout</option>
-		<option value="">TestFormular</option>
+		<option value="AVATAR"<?php echo ((strcmp(trim($module), "AVATAR") == 0) ? " selected=\"selected\"" : ""); ?>>AVATAR</option>
+		<option value="ROLE"<?php echo ((strcmp(trim($module), "ROLE") == 0) ? " selected=\"selected\"" : ""); ?>>ROLE</option>
+		<option value="LOGIN"<?php echo ((strcmp(trim($module), "LOGIN") == 0) ? " selected=\"selected\"" : ""); ?>>LOGIN</option>
+		<option value="LOGOUT"<?php echo ((strcmp(trim($module), "LOGOUT") == 0) ? " selected=\"selected\"" : ""); ?>>LOGOUT</option>
+		<option value="CLOSE"<?php echo ((strcmp(trim($module), "CLOSE") == 0) ? " selected=\"selected\"" : ""); ?>>CLOSE</option>
+		<option value="LAYER"<?php echo ((strcmp(trim($module), "LAYER") == 0) ? " selected=\"selected\"" : ""); ?>>LAYER</option>
+		<option value="CREATE"<?php echo ((strcmp(trim($module), "CREATE") == 0) ? " selected=\"selected\"" : ""); ?>>CREATE</option>
+		<option value="UPLOAD"<?php echo ((strcmp(trim($module), "UPLOAD") == 0) ? " selected=\"selected\"" : ""); ?>>UPLOAD</option>
+		<option value="CURRENCY"<?php echo ((strcmp(trim($module), "CURRENCY") == 0) ? " selected=\"selected\"" : ""); ?>>CURRENCY</option>
+		<option value="TITLE"<?php echo ((strcmp(trim($module), "TITLE") == 0) ? " selected=\"selected\"" : ""); ?>>TITLE</option>
 		</select></div>
-		<div><label>UserEmail:</label><input type="text" class="field" value="" placeholder="email" name="userEmail" /></div>
-		<div><label>UserPass:</label><input type="text" class="field" value="" placeholder="password" name="userPass" /></div>
-		<div><label>UserName:</label><input type="text" class="field" value="" placeholder="username" name="userName" /></div>
-		<div><label>UserPhone:</label><input type="text" class="field" value="" placeholder="phone" name="userPhone" /></div>
-		<div><label>UserToken:</label><input type="text" class="field" value="" placeholder="token" name="userToken" /></div>
+		<div><label>Identity:</label><input type="text" class="field" value="" placeholder="identity" name="identity" /></div>
+		<div><label>Password:</label><input type="text" class="field" value="" placeholder="password" name="password" /></div>
+		<div><label>ssId:</label><input type="text" class="field" value="<?php echo trim($ssId); ?>" placeholder="ssId" name="ssId" /></div>		
 		<div><label>WalletAddress:</label><input type="text" class="field" value="" placeholder="walletAddress" name="walletAddress" /></div>
 		<div><label></label><input type="submit" class="field" value="submit" /></div>
 	</div>
-	<div class="description">
-		<ul>
-			<li>url : <?php echo "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]"; ?></li>
-			<li>post variable : 
-				<ul>
-					<li>"module" : "AvatarGenerator"</li>
-					<li>"walletAddress" : "1BoatSLRHtKNngkdXEeobR76b53LETtpyT"</li>
-				</ul>
-			</li>
-		</ul>
-	</div>
-</fieldset>
-<fieldset><legend>Avatar Gallery</legend>
-<div id="avatars"><div>
 </fieldset>
 <fieldset><legend>Avatar</legend>
 	<div class="settings">
@@ -100,65 +80,25 @@ $("#generator").on("click", function(event) {
 	requestAvatar($("#walletAddress").val());
 });
 
-$("div#avatars").on("click", "img.avatar", function(event) {
-	event.preventDefault();
-	event.stopPropagation();
-	
-	var walletAddress = $(this).prop("title");
-	var imageData = $(this).prop("src");
-	
-	console.log("click...");
-	
-	$("#avatar256").prop("src", imageData);
-	$("#avatar128").prop("src", imageData);
-	$("#avatar64").prop("src", imageData);
-	$("#walletAddress").val(walletAddress);
-});
-
 function requestAvatar(walletAddress) {
+	$.post(
+		"/api/", { module: "AVATAR", walletAddress: walletAddress }
+	).done(
+		function( data ) {
+			var obj = jQuery.parseJSON(data);
 
-	if (!addAvatar(walletAddress)) {
-		$.post(
-			"/api/", { module: "AvatarGenerator", walletAddress: walletAddress }
-		).done(
-			function( data ) {
-				var obj = jQuery.parseJSON(data);
-
-				$("#avatar256").attr("src", obj.imageData);
-				$("#avatar128").attr("src", obj.imageData);
-				$("#avatar64").attr("src", obj.imageData);
-				
-				$('#avatars').find('img').each(function(i) { 
-					if ($(this).prop("title") == obj.walletAddress) {
-						$(this).prop("src", obj.imageData);
-						return false;
-					}
-				}); 
-			}
-		);
-	}
-}
-
-function addAvatar(walletAddress) {
-	var imageData =  "/api/img/loading.svg";
-	var done = 1;
-	
-	if (walletAddress != "") {
-		done = 0;
-		
-		$('#avatars').find('img').each(function(i) { 
-			if ($(this).prop("title") == walletAddress) {
-				done = 1;
-				return false;
-			}
-		}); 
-		
-		if (!done) {
-			$("#avatars").append("<div style=\"display:inline;margin-right:2px;margin-bottom:2px;\"><img src=\"" + imageData +  "\" class=\"avatar\" width=\"64\" title=\"" + walletAddress + "\"></div>");
+			$("#avatar256").attr("src", obj.imageData);
+			$("#avatar128").attr("src", obj.imageData);
+			$("#avatar64").attr("src", obj.imageData);
+			
+			$('#avatars').find('img').each(function(i) { 
+				if ($(this).prop("title") == obj.walletAddress) {
+					$(this).prop("src", obj.imageData);
+					return false;
+				}
+			}); 
 		}
-	}
-	
-	return done;
+	);
 }
 
 $(document).ready(function(){

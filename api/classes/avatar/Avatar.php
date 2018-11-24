@@ -9,23 +9,39 @@ class Avatar implements JsonSerializable {
 	public function jsonSerialize()
 	{
 		return array(
+			'ssid' => $this->ssID,
 			'walletAddress' => $this->walletAddress,
 			'hashData' => $this->hashData,
+			'prefix' => $this->prefix,
+			'category' => $this->category,
+			'parts' => $this->parts,
 			'imageData' => $this->imageData,
 			'errorCode' => $this->errorCode
 		);
     }
 
+	private $prefix;
+	private $parts;
+	private $category;
 	private $walletAddress;
 	private $hashData;
 	private $imageData;
     private $errorCode;
+	private $ssID;
 	
 	public function __construct() {
+		$this->ssID = "";
+		$this->prefix = "";
+		$this->parts = array();
+		$this->category = "";
 		$this->hashData = "";
 		$this->imageData = "";
         $this->errorCode = 0;
 		$this->walletAddress = "";
+	}
+	
+	public function setSSID($ssID){
+		$this->ssID = trim($ssID);
 	}
 	
 	private function distance($x1, $x2, $y1, $y2) {
@@ -350,28 +366,6 @@ class Avatar implements JsonSerializable {
 			$yPos += 32;
 		}		
 
-		$fields = $this->prepare($hash, $im, $colorset);
-		
-		$x = 0;
-		$y = 0;
-		
-		for ($i = 0; $i < count($fields); $i++) {
-			if ($fields[$i]->getTile() == 9) {
-				$x = $fields[$i]->getXpos() + 20;
-				$y = $fields[$i]->getYpos() + 10;
-			}
-        }
-		
-		for ($i = 0; $i < count($fields); $i++) {
-			if ($fields[$i]->getTile() > 0 && $fields[$i]->getTile() < 9) {
-				$xPos = $fields[$i]->getXpos() + 20;
-				$yPos = $fields[$i]->getYpos() + 10;
-				$color = $fields[$i]->getColor();
-		
-				imageline($im, $xPos, $yPos, $x, $y, $color);
-				imagefilledellipse($im, $xPos, $yPos, 4, 4, $color);
-			}
-        }
 		
 		// image mirrowed
 		//$tmp = imagecreatetruecolor($width / 2, $height);
@@ -379,8 +373,10 @@ class Avatar implements JsonSerializable {
 		//imageflip($tmp, IMG_FLIP_HORIZONTAL);
 		//imagecopy($im, $tmp, $width / 2, 0, 0, 0, $width / 2, $height);
 
-		
-		$im = $this->defaultCat($hash, $size='');
+		$prefix = "";
+		$object = 
+		$this->defaultCat($hash, $prefix);
+		$im = $object->avatar;
 		
 		//$background = imagecreatefrompng(__DIR__."/../../img/background.png");
 		//imageSaveAlpha($background, true);
@@ -409,14 +405,17 @@ class Avatar implements JsonSerializable {
 		$data = ob_get_contents();
 		ob_end_clean(); 
 		
+		$this->prefix = $prefix;
+		$this->parts = $object->parts;
+		$this->category = $object->category;
 		$this->walletAddress = $walletAddress;
 		$this->hashData = $hash;
 		$this->imageData = sprintf("data:image/png;base64,%s", base64_encode($data));
 	}
 	
-	public function defaultCat($seed='', $size='') {
+	public function defaultCat($seed='', $prefix='') {
     // init random seed
-		if($seed) srand( hexdec(substr(md5($seed),0,6)) );
+		if($seed) srand( hexdec(substr(md5($prefix.$seed),0,6)) );
 
 		// throw the dice for body parts
 		$parts = array(
@@ -436,7 +435,7 @@ class Avatar implements JsonSerializable {
 
 		// add parts
 		foreach($parts as $part => $num){
-			$file = dirname(__FILE__).'/../../img/cat/'.$part.'_'.$num.'.png';
+			$file = dirname(__FILE__).'/../../images/cat/'.$part.'_'.$num.'.png';
 
 			$im = imagecreatefrompng($file);
 			if(!$im) die('Failed to load '.$file);
@@ -448,7 +447,12 @@ class Avatar implements JsonSerializable {
 		// restore random seed
 		if($seed) srand();
 		
-		return $monster;
+		$data = new \stdClass;
+		$data->category = "cat";
+		$data->parts = $parts;
+		$data->avatar = $monster;
+		
+		return $data;
 	}
 	
 	public function prepare($hash, $im, $colorset) {
