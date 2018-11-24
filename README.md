@@ -90,6 +90,22 @@ Output:
 ["Lucky Magpie","Distinct Lemur","Clear Boar","Nervous Corncrake","Stupid Mandrill","Obnoxious Peccary","Lovely Tapir","Magnificent Pygmy","Eager Oystercatcher","Helpless Tamarin"]
 ```
 
+## UPLOAD
+
+User can upload multiple files. File is the browser file object. 
+LayerId directed to the layer name for combination of layer name and current number of layers as file name.
+DivId is the wrapping divider for the image in html template. Unlink is the file id for deleting unused file.
+If file is unlinked, it is not longer assigned.
+
+Input:
+```
+{module : "upload", file : file, layerId : layerId, divId : divId, unlink : unlinkId }
+```
+
+Output:
+```
+[{pkId:1, divId:2, filename:"fur03.png" : assigned:true}]
+```
 
 
 

@@ -18,9 +18,13 @@ use admin\UserRole as UserRole;
 
 session_start();
 
-function getParam($array, $param) {
+function getParam($array, $param, $label = '') {
 	if (array_key_exists($param, $array)) {
 		return $array[$param];
+	}
+	
+	if (strcmp($label, "array") == 0) {
+		return array();
 	}
 	
 	return null;
@@ -79,7 +83,8 @@ switch(strtoupper($module)) {
 		$roleId = strip_tags(stripslashes(trim(getParam($_POST ,"roleId"))));		
 		$obj = new \stdClass;
 		$obj->ssId = session_Id();
-		$obj->roleId = $roleId;
+		$obj->userId = 1;
+		$obj->roleId = (intval($roleId) == 0) ? 1 : abs(intval($roleId));
 		echo json_encode($obj, JSON_UNESCAPED_UNICODE);
 		break;
 	case "LOGOUT":
@@ -125,8 +130,8 @@ switch(strtoupper($module)) {
 		$path = __DIR__.'/file/upload/';
 		$layerId = intval(getParam($_POST, "layerId"));
 		$divId = getParam($_POST, "divId");
-		$ids = getParam($_POST, "unlink");
-		(new FileUpload())->execute($_FILES, $path, $layerId, $divId, $ids);
+		$ids = getParam($_POST, "unlink", "array");
+		(new FileUpload())->execute($_FILES, "file", $path, $layerId, $divId, $ids);
 		break;
 	case "CURRENCY":
 		echo json_encode((new Currency())->getTopTen(), JSON_UNESCAPED_UNICODE);
