@@ -7,6 +7,8 @@ class TestFormular {
 	}
 	
 	public function execute($ssId, $module) {
+		$module = strtoupper($module);
+		
 		require_once("view/TestFormularView.php"); 
 	}
 }
