@@ -11,10 +11,14 @@ class Currency {
 		$html = "";
 		$url = 'https://en.wikipedia.org/wiki/List_of_cryptocurrencies';
 		
-		if ($handle = curl_init($url)) {
-			curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
-			$html = curl_exec($handle);	
-			curl_close($handle);
+		if ($this->isCurl()) {
+			if ($handle = curl_init($url)) {
+				curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
+				$html = curl_exec($handle);	
+				curl_close($handle);
+			}
+		} else {
+			$html = file_get_contents($url);
 		}
 		
 		return $html;
@@ -27,11 +31,7 @@ class Currency {
 	public function getTopTen() {
 		$currency = array();
 		$supported = array("EOS","ETH");
-		$html = "";
-		
-		if ($this->isCurl()) {
-			$html = $this->fetchData();
-		}
+		$html = $this->fetchData();
 	
 		// Prevent HTML errors from displaying
 		libxml_use_internal_errors(true); 
@@ -50,13 +50,15 @@ class Currency {
 			if (in_array("wikitable", explode(" ", trim($table->getAttribute("class"))))) {
 				$rows = $table->getElementsByTagName("tr");
 				foreach ($rows as $row) {
-					$cells = $row -> getElementsByTagName('td');
-					if (count($cells) > 0) {
-						$obj = new stdClass;
+					$cells = $row->getElementsByTagName('td');
+					if ($cells->length > 0) {
+						$obj = new \stdClass;
 						$cancel = 0;
+
 						foreach ($cells as $index => $cell) {
 							$nodeValue = trim($cell->nodeValue);
 							$nodeValue = preg_replace('/\[\d+\]/', '', $nodeValue);
+
 							switch ($index) {
 								case 0:
 									$release = intval($nodeValue);
@@ -91,6 +93,7 @@ class Currency {
 									continue;
 									break;
 							}
+
 							if ($cancel == 1) {
 								break;
 							}
@@ -100,7 +103,6 @@ class Currency {
 							array_push($currency, $obj);
 						}
 					}
-
 				}		
 			}
 		}
@@ -108,6 +110,3 @@ class Currency {
 		return $currency;
 	}
 }
-
-		$currency = (new Currency())->getTopTen();
-		echo json_encode($currency, JSON_UNESCAPED_UNICODE);
