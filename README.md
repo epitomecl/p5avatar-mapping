@@ -1,22 +1,24 @@
 # Avatar Layer Generation Tool
 
+Web interface for user interaction between homepage and backend.
+
 call http://13.209.194.1:5000/api/
 
-module : 
+Current module available: 
 
-AVATAR
-CATEGORY
-CLOSE
-CREATE
-CURRENCY
-DESIGNER
-LAYER
-LOGIN
-LOGOUT
-PRICE
-ROLE
-TITLE
-UPLOAD
+[x]AVATAR
+[ ]CATEGORY
+[x]CLOSE
+[ ]CREATE
+[x]CURRENCY
+[ ]DESIGNER
+[ ]LAYER
+[x]LOGIN
+[x]LOGOUT
+[ ]PRICE
+[x]ROLE
+[x]TITLE
+[ ]UPLOAD
 
 ## CLOSE
 
@@ -62,6 +64,8 @@ Output:
 
 ## LOGOUT
 
+User session will be closed.
+
 Input:
 ```
 {module : "logout", ssID : ssId, userId : userId}
@@ -73,6 +77,8 @@ Output:
 ```
 
 ## TITLE
+
+Give more free styled names for avatar or stage name. Each call response with 10 random names.
 
 Input:
 ```
