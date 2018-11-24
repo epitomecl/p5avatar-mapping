@@ -14,6 +14,7 @@ use avatar\AvatarGenerator as AvatarGenerator;
 use avatar\Currency as Currency;
 use avatar\Alliteration as Alliteration;
 use admin\FileUpload as FileUpload;
+use admin\UserRole as UserRole;
 
 session_start();
 
@@ -63,8 +64,7 @@ switch(strtoupper($module)) {
 		$obj = new \stdClass;
 		$obj->ssId = session_Id();
 		$roleId = strip_tags(stripslashes(trim(getParam($_POST ,"roleId"))));
-		$obj->role = array("NULL", "ADMIN", "USER", "DESIGNER", "SUPERVISOR");
-		echo json_encode($obj, JSON_UNESCAPED_UNICODE);
+		(new UserRole())->execute($userId, $roleId);
 		break;
 	case "AVATAR":
 		$walletAddress = strip_tags(stripslashes(trim(getParam($_POST, "walletAddress"))));
