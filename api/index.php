@@ -94,6 +94,10 @@ switch(strtoupper($module)) {
 		$obj->success = true;
 		echo json_encode($obj, JSON_UNESCAPED_UNICODE);	
 		break;	
+	case "CATEGORY":
+		$obj = new \stdClass;
+		$obj->success = true;
+		echo json_encode($obj, JSON_UNESCAPED_UNICODE);	
 	case "CREATE":
 		$sId = strip_tags(stripslashes(trim(getParam($_POST ,"ssId"))));
 		$obj = new \stdClass;
@@ -126,6 +130,16 @@ switch(strtoupper($module)) {
 		break;
 	case "CURRENCY":
 		echo json_encode((new Currency())->getTopTen(), JSON_UNESCAPED_UNICODE);
+		break;
+	case "DESIGNER":
+		$obj = new \stdClass;
+		$obj->success = true;
+		echo json_encode($obj, JSON_UNESCAPED_UNICODE);	
+		break;
+	case "PRICE":
+		$obj = new \stdClass;
+		$obj->success = true;
+		echo json_encode($obj, JSON_UNESCAPED_UNICODE);	
 		break;
 	case "TITLE":
 		echo json_encode((new Alliteration())->getTopTen(), JSON_UNESCAPED_UNICODE);
