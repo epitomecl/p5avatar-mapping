@@ -4,21 +4,21 @@ Web interface for user interaction between homepage and backend.
 
 call http://13.209.194.1:5000/api/
 
-Current module available: 
+Current module available:
 
-[x]AVATAR
-[ ]CATEGORY
-[x]CLOSE
-[ ]CREATE
-[x]CURRENCY
-[ ]DESIGNER
-[ ]LAYER
-[x]LOGIN
-[x]LOGOUT
-[ ]PRICE
-[x]ROLE
-[x]TITLE
-[ ]UPLOAD
+- [x] AVATAR
+- [ ] CATEGORY
+- [x] CLOSE
+- [ ] CREATE
+- [x] CURRENCY
+- [ ] DESIGNER
+- [ ] LAYER
+- [x] LOGIN
+- [x] LOGOUT
+- [ ] PRICE
+- [x] ROLE
+- [x] TITLE
+- [ ] UPLOAD
 
 ## CLOSE
 
