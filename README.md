@@ -66,6 +66,11 @@ Input:
 {module : "currency"}
 ```
 
+Output:
+```
+[{"release":2009,"currency":"Bitcoin","symbol":["BTC","XBT","₿"],"supported":false,"notes":"The first and most widely used decentralized ledger currency, with the highest market capitalization."},...]
+```
+
 ## HASHTAG
 
 If ssId is given and user session is alive, a set of hashtags, used by other designer, is responded.
@@ -78,11 +83,6 @@ Input:
 Output: 
 ```
 array of favorite hashtags
-```
-
-Output:
-```
-[{"release":2009,"currency":"Bitcoin","symbol":["BTC","XBT","₿"],"supported":false,"notes":"The first and most widely used decentralized ledger currency, with the highest market capitalization."},...]
 ```
 
 ## LOGIN
