@@ -15,6 +15,23 @@ use avatar\Currency as Currency;
 use avatar\Alliteration as Alliteration;
 use admin\FileUpload as FileUpload;
 use admin\UserRole as UserRole;
+use admin\ApiKey as ApiKey;
+use admin\HashTag as HashTag;
+use admin\SignUp as SignUp;
+use admin\Profile as Profile;
+
+// Allow CORS
+if (isset($_SERVER['HTTP_ORIGIN'])) {
+    header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+    header('Access-Control-Allow-Credentials: true');    
+    header("Access-Control-Allow-Methods: GET, POST, PUT, DEL, OPTIONS"); 
+}   
+// Access-Control headers are received during OPTIONS requests
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    header("Access-Control-Allow-Headers: *");
+}
+
+header("Content-Type: text/html; charset=utf-8");
 
 session_start();
 
@@ -39,8 +56,6 @@ $userEmail = strip_tags(stripslashes(trim(getParam($_POST, "userEmail"))));
 $userPhone = strip_tags(stripslashes(trim(getParam($_POST, "userPhone"))));
 $walletAddress = strip_tags(stripslashes(trim(getParam($_POST, "walletAddress"))));
 
-header("Content-Type: text/html; charset=utf-8");
-
 switch($module) {
 	case "UserManagementLogin":
 		(new UserManagementLogin($userEmail, $userPass, $userName, $userPhone))->execute();
@@ -63,6 +78,16 @@ switch($module) {
 }
 
 switch(strtoupper($module)) {
+	case "APIKEY":
+		$firstName = strip_tags(stripslashes(trim(getParam($_POST ,"firstName"))));
+		$lastName = strip_tags(stripslashes(trim(getParam($_POST ,"lastName"))));
+		$eMail = strip_tags(stripslashes(trim(getParam($_POST ,"eMail"))));
+		$message = strip_tags(stripslashes(trim(getParam($_POST ,"message"))));		
+		$obj = new \stdClass;
+		$obj->ssId = session_Id();
+		$roleId = strip_tags(stripslashes(trim(getParam($_POST ,"roleId"))));
+		(new ApiKey())->execute($firstName, $lastName, $eMail, $message);
+		break;
 	case "ROLE":
 		$ssId = strip_tags(stripslashes(trim(getParam($_POST ,"ssId"))));
 		$obj = new \stdClass;
@@ -77,6 +102,10 @@ switch(strtoupper($module)) {
 		$ssId = strip_tags(stripslashes(trim(getParam($_POST ,"ssId"))));
 		(new AvatarGenerator($ssId, $walletAddress))->execute();
 		break;		
+	case "HASHTAG":
+		$ssId = strip_tags(stripslashes(trim(getParam($_POST ,"ssId"))));
+		(new HashTag())->execute($ssId);
+		break;
 	case "LOGIN":
 		$identity = strip_tags(stripslashes(trim(getParam($_POST, "identity"))));
 		$passwort = strip_tags(stripslashes(trim(getParam($_POST ,"password"))));
@@ -126,6 +155,15 @@ switch(strtoupper($module)) {
 		$obj->success= true;
 		echo json_encode($obj, JSON_UNESCAPED_UNICODE);	
 		break;
+	case "PROFILE":
+		$ssId = strip_tags(stripslashes(trim(getParam($_POST ,"ssId"))));
+		$firstName = strip_tags(stripslashes(trim(getParam($_POST ,"firstName"))));
+		$lastName = strip_tags(stripslashes(trim(getParam($_POST ,"lastName"))));
+		$stageName = strip_tags(stripslashes(trim(getParam($_POST ,"lastName"))));
+		$eMail = strip_tags(stripslashes(trim(getParam($_POST ,"eMail"))));
+		$imageData = strip_tags(stripslashes(trim(getParam($_POST ,"imageData"))));
+		(new Profile())->execute($ssId, $firstName, $lastName, $stageName, $eMail, $imageData);
+		break;
 	case "UPLOAD":
 		$path = __DIR__.'/file/upload/';
 		$layerId = intval(getParam($_POST, "layerId"));
@@ -145,6 +183,12 @@ switch(strtoupper($module)) {
 		$obj = new \stdClass;
 		$obj->success = true;
 		echo json_encode($obj, JSON_UNESCAPED_UNICODE);	
+		break;
+	case "SIGNUP":
+		$identity = strip_tags(stripslashes(trim(getParam($_POST, "identity"))));
+		$eMail = strip_tags(stripslashes(trim(getParam($_POST ,"eMail"))));
+		$roleId = strip_tags(stripslashes(trim(getParam($_POST ,"roleId"))));
+		(new SignUp())->execute($identity, $eMail, $roleId);
 		break;
 	case "TITLE":
 		echo json_encode((new Alliteration())->getTopTen(), JSON_UNESCAPED_UNICODE);

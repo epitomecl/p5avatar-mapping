@@ -34,16 +34,20 @@ fieldset {
 <fieldset><legend>Settings</legend>
 	<div class="settings">
 		<div><label>Module:</label><select name="module" class="field">
-		<option value="AVATAR"<?php echo ((strcmp(trim($module), "AVATAR") == 0) ? " selected=\"selected\"" : ""); ?>>AVATAR</option>
-		<option value="ROLE"<?php echo ((strcmp(trim($module), "ROLE") == 0) ? " selected=\"selected\"" : ""); ?>>ROLE</option>
-		<option value="LOGIN"<?php echo ((strcmp(trim($module), "LOGIN") == 0) ? " selected=\"selected\"" : ""); ?>>LOGIN</option>
-		<option value="LOGOUT"<?php echo ((strcmp(trim($module), "LOGOUT") == 0) ? " selected=\"selected\"" : ""); ?>>LOGOUT</option>
-		<option value="CLOSE"<?php echo ((strcmp(trim($module), "CLOSE") == 0) ? " selected=\"selected\"" : ""); ?>>CLOSE</option>
-		<option value="LAYER"<?php echo ((strcmp(trim($module), "LAYER") == 0) ? " selected=\"selected\"" : ""); ?>>LAYER</option>
-		<option value="CREATE"<?php echo ((strcmp(trim($module), "CREATE") == 0) ? " selected=\"selected\"" : ""); ?>>CREATE</option>
-		<option value="UPLOAD"<?php echo ((strcmp(trim($module), "UPLOAD") == 0) ? " selected=\"selected\"" : ""); ?>>UPLOAD</option>
-		<option value="CURRENCY"<?php echo ((strcmp(trim($module), "CURRENCY") == 0) ? " selected=\"selected\"" : ""); ?>>CURRENCY</option>
-		<option value="TITLE"<?php echo ((strcmp(trim($module), "TITLE") == 0) ? " selected=\"selected\"" : ""); ?>>TITLE</option>
+				<option value="APIKEY"<?php echo ((strcmp(trim($module), "APIKEY") == 0) ? " selected=\"selected\"" : ""); ?>>APIKEY</option>
+				<option value="AVATAR"<?php echo ((strcmp(trim($module), "AVATAR") == 0) ? " selected=\"selected\"" : ""); ?>>AVATAR</option>
+				<option value="CLOSE"<?php echo ((strcmp(trim($module), "CLOSE") == 0) ? " selected=\"selected\"" : ""); ?>>CLOSE</option>
+				<option value="CREATE"<?php echo ((strcmp(trim($module), "CREATE") == 0) ? " selected=\"selected\"" : ""); ?>>CREATE</option>
+				<option value="CURRENCY"<?php echo ((strcmp(trim($module), "CURRENCY") == 0) ? " selected=\"selected\"" : ""); ?>>CURRENCY</option>
+				<option value="HASHTAG"<?php echo ((strcmp(trim($module), "HASHTAG") == 0) ? " selected=\"selected\"" : ""); ?>>HASHTAG</option>
+				<option value="LAYER"<?php echo ((strcmp(trim($module), "LAYER") == 0) ? " selected=\"selected\"" : ""); ?>>LAYER</option>
+				<option value="LOGIN"<?php echo ((strcmp(trim($module), "LOGIN") == 0) ? " selected=\"selected\"" : ""); ?>>LOGIN</option>
+				<option value="LOGOUT"<?php echo ((strcmp(trim($module), "LOGOUT") == 0) ? " selected=\"selected\"" : ""); ?>>LOGOUT</option>
+				<option value="PROFILE"<?php echo ((strcmp(trim($module), "PROFILE") == 0) ? " selected=\"selected\"" : ""); ?>>PROFILE</option>
+				<option value="ROLE"<?php echo ((strcmp(trim($module), "ROLE") == 0) ? " selected=\"selected\"" : ""); ?>>ROLE</option>
+				<option value="SIGNUP"<?php echo ((strcmp(trim($module), "SIGNUP") == 0) ? " selected=\"selected\"" : ""); ?>>SIGNUP</option>
+				<option value="TITLE"<?php echo ((strcmp(trim($module), "TITLE") == 0) ? " selected=\"selected\"" : ""); ?>>TITLE</option>
+				<option value="UPLOAD"<?php echo ((strcmp(trim($module), "UPLOAD") == 0) ? " selected=\"selected\"" : ""); ?>>UPLOAD</option>
 		</select></div>
 		<div><label>Identity:</label><input type="text" class="field" value="" placeholder="identity" name="identity" /></div>
 		<div><label>Password:</label><input type="text" class="field" value="" placeholder="password" name="password" /></div>
