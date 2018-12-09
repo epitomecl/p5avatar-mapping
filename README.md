@@ -27,7 +27,7 @@ Current module available:
 
 ## APIKEY
 
-The input data (First Name, Last Name, Email, How will you use the APIs (optional)) are stored into database. 
+The input data (First Name, Last Name, Email, How will you use the API (optional)) are stored into database. 
 To given eMail address an random link will be send. If eMail has wrong spelling, success will be false. 
 The user has to check also spam folder. Inside the email is a link with access code. 
 The link is 30 min valid. After 30 min old invalid users will be delete. 
@@ -127,6 +127,28 @@ imageData : imageData}
 Output: 
 ```
 {"success":true}
+```
+
+## ROLE
+
+For user login form we need a role selection. Possible roles are given by backend service. 
+If ssId is given and user session is alive, current roleId is responsed. 
+The roleId is specified as index of given array. 
+
+1 : "USER", 2 : "DESIGNER", 3 : "SUPERVISOR", 4: “DEVELOPER”, 5 : "ADMIN"
+
+Input:
+```
+{module : "role", ssId : ssId, userId : userId, roleId :  roleId}
+```
+
+Output: 
+```
+[{"roleId":1,"roleName":"USER","selected":false},
+{"roleId":2,"roleName":"DESIGNER","selected":false},
+{"roleId":3,"roleName":"SUPERVISOR","selected":false},
+{"roleId":4,"roleName":"DEVELOPER","selected":false},
+{"roleId":5,"roleName":"ADMIN","selected":false}]
 ```
 
 ## TITLE

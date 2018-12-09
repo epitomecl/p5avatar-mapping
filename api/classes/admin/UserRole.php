@@ -8,7 +8,7 @@ class UserRole {
 	}
 	
 	public function execute($userId, $roleId) {
-		$items = array("USER", "DESIGNER", "SUPERVISOR", "ADMIN");
+		$items = array("USER", "DESIGNER", "SUPERVISOR", "DEVELOPER", "ADMIN");
 		$roles = array();
 		
 		for($index = 1; $index <= count($items); $index++) {
