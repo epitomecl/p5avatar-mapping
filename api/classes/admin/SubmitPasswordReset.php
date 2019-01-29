@@ -2,6 +2,7 @@
 
 namespace admin;
 
+use \mysqli as mysqli;
 use \JsonSerializable as JsonSerializable;
 
 class SubmitPasswordReset implements JsonSerializable{
@@ -9,6 +10,7 @@ class SubmitPasswordReset implements JsonSerializable{
 	private $userToken;
 	private $userPass;
 	private $errorCode;
+	private $callback;
 	
 	public function jsonSerialize() {
         return array(
@@ -21,10 +23,11 @@ class SubmitPasswordReset implements JsonSerializable{
 		$this->userName = $userName;		
 		$this->userPass = $userPass;
 		$this->errorCode = 0;
+		$this->callback = "http://13.209.194.1:3000/landing";
 	}
 	
 	public function execute() {
-		$config = parse_ini_file($_SERVER["DOCUMENT_ROOT"] . "/include/db.mysql.ini");
+		$config = parse_ini_file($_SERVER["DOCUMENT_ROOT"] . "/api/include/db.mysql.ini");
 		$mysqli = new mysqli($config['HOST'], $config['USER'], $config['PASS'], $config['NAME']);
 
 		$mysqli->set_charset("utf8");
@@ -36,39 +39,50 @@ class SubmitPasswordReset implements JsonSerializable{
 		$sql = sprintf($sql, $this->userName);
 
 		$user = new UserData();
-		$result = $mysqli->query($sql);
 		
-		if ($result->num_rows > 0) {
-			while ($row = $result->fetch_assoc()) {
-				$user->setUserToken($this->userToken);
-				$user->setUserPass($this->userPass);
-				$user->setUserId($row["user_id"]);
-				$user->setUserName($row["user_name"]);
-				$user->setUserEmail($row["email"]);
-				$user->setUserPhone($row["phone"]);
-				$user->setModified(strtotime($row["modified"]));
-				$user->setSalt($row["salt"]);
-				
-				if ($user->getModified() < time()) {
-					$this->errorCode = 32;
-				} elseif (intval($row["remaining"]) < 0) {
-					$this->errorCode = 255;
-				} elseif ($this->hasValidToken($user)) {
-					$this->errorCode = 16;
+		if ($result = $mysqli->query($sql)) {
+			if ($result->num_rows > 0) {
+				while ($row = $result->fetch_assoc()) {
+					$user->setUserToken($this->userToken);
+					$user->setUserPass($this->userPass);
+					$user->setUserId($row["user_id"]);
+					$user->setUserName($row["user_name"]);
+					$user->setUserEmail($row["email"]);
+					$user->setUserPhone($row["phone"]);
+					$user->setModified(strtotime($row["modified"]));
+					$user->setSalt($row["salt"]);
+					
+					if ($user->getModified() < time()) {
+						$this->errorCode = 32;
+					} elseif (intval($row["remaining"]) < 0) {
+						$this->errorCode = 255;
+					} elseif ($this->hasValidToken($user)) {
+						$this->errorCode = 16;
+					}
 				}
+				$result->free();
+			} else {
+				$this->errorCode = 64;
 			}
-			$result->free();
 		} else {
-			$this->errorCode = 64;
+			$this->errorCode = 1;
 		}
-		
 		if ($this->errorCode == 0) {
 			$this->updatePassword($mysqli, $user);
 		}
 
 		$mysqli->close();
 		
-		echo json_encode($this, JSON_UNESCAPED_UNICODE);
+		if (empty($this->callback)) {
+			echo json_encode($this, JSON_UNESCAPED_UNICODE);
+		} else {
+			$html = $this->fetchHtml($this->callback);
+			$url = substr($this->callback, 0,  strrpos($this->callback, "/") + 1);
+			$html = str_replace("<head>", sprintf("<head><base href=\"%s\">", $url), $html);
+			$html = str_replace("Beta", json_encode($this, JSON_UNESCAPED_UNICODE), $html);
+			
+			echo $html;
+		}
 	}
 	
 	public function hasValidToken($user) {
@@ -101,4 +115,24 @@ class SubmitPasswordReset implements JsonSerializable{
 			$this->errorCode = 1;
 		}
 	}
+	
+	private function fetchHtml($url) {
+		$html = "";
+		
+		if ($this->isCurl()) {
+			if ($handle = curl_init($url)) {
+				curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
+				$html = curl_exec($handle);	
+				curl_close($handle);
+			}
+		} else {
+			$html = file_get_contents($url);
+		}
+		
+		return $html;
+	}
+
+	private function isCurl(){
+		return function_exists('curl_version');
+	}	
 }

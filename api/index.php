@@ -4,21 +4,29 @@ ini_set('display_errors', 1);
 
 require_once("classes/Autoloader.php");
 
-use admin\RequestPasswordReset as RequestPasswordReset;
-use admin\SubmitPasswordReset as SubmitPasswordReset;
+use \Exception as Exception;
+
 use admin\TestFormular as TestFormular;
-use admin\UserManagementAutoLogin as UserManagementAutoLogin;
-use admin\UserManagementLogin as UserManagementLogin;
-use admin\UserManagementLogout as UserManagementLogout;
-use avatar\AvatarGenerator as AvatarGenerator;
-use avatar\Currency as Currency;
-use avatar\Alliteration as Alliteration;
-use admin\FileUpload as FileUpload;
-use admin\UserRole as UserRole;
-use admin\ApiKey as ApiKey;
-use admin\HashTag as HashTag;
-use admin\SignUp as SignUp;
-use admin\Profile as Profile;
+
+use modules\ApiKey as ApiKey;
+use modules\Avatar as Avatar;
+use modules\Category as Category;
+use modules\Close as Close;
+use modules\Create as Create;
+use modules\Currency as Currency;
+use modules\Designer as Designer;
+use modules\HashTag as HashTag;
+use modules\Layer as Layer;
+use modules\Login as Login;
+use modules\Logout as Logout;
+use modules\Password as Password;
+use modules\Price as Price;
+use modules\Profile as Profile;
+use modules\SignUp as SignUp;
+use modules\Title as Title;
+use modules\Upload as Upload;
+use modules\UserRole as UserRole;
+use modules\WhoIsOnline as WhoIsOnline;
 
 // Allow CORS
 if (isset($_SERVER['HTTP_ORIGIN'])) {
@@ -37,163 +45,177 @@ session_start();
 
 function getParam($array, $param, $label = '') {
 	if (array_key_exists($param, $array)) {
-		return $array[$param];
+		
+		if (strcmp($label, "array") == 0) {
+			return $array[$param];
+		} elseif (strcmp($label, "int") == 0) {
+			return intval(trim($array[$param]));
+		} elseif (strcmp($label, "double") == 0) {
+			return doubleval(trim($array[$param]));
+		} else {
+			return strip_tags(stripslashes(trim($array[$param])));
+		}
 	}
-	
-	if (strcmp($label, "array") == 0) {
-		return array();
-	}
-	
+
 	return null;
 }
 
-$module = strip_tags(stripslashes(trim(getParam($_POST, "module"))));
-$userId = strip_tags(stripslashes(trim(getParam($_POST, "userId"))));
-$userToken = strip_tags(stripslashes(trim(getParam($_POST, "userToken"))));
-$userPass = strip_tags(stripslashes(trim(getParam($_POST, "userPass"))));
-$userName = strip_tags(stripslashes(trim(getParam($_POST ,"userName"))));
-$userEmail = strip_tags(stripslashes(trim(getParam($_POST, "userEmail"))));
-$userPhone = strip_tags(stripslashes(trim(getParam($_POST, "userPhone"))));
-$walletAddress = strip_tags(stripslashes(trim(getParam($_POST, "walletAddress"))));
+$module = getParam($_POST, "module");
+$httpMethod = $_SERVER["REQUEST_METHOD"];
 
-switch($module) {
-	case "UserManagementLogin":
-		(new UserManagementLogin($userEmail, $userPass, $userName, $userPhone))->execute();
-		break;
-	case "UserManagementAutoLogin":
-		(new UserManagementAutoLogin($userToken, $userId))->execute();
-		break;
-	case "UserManagementLogout":
-		(new UserManagementLogout($userToken, $userId))->execute();
-		break;
-	case "RequestPasswordReset":
-		(new RequestPasswordReset($userName, $userEmail, $userPhone))->execute();
-		break;
-	case "SubmitPasswordReset":
-		(new SubmitPasswordReset($userToken, $userName, $userPass))->execute();
-		break;
-	case "AvatarGenerator":
-		(new AvatarGenerator($ssId = session_Id(), $walletAddress))->execute();
-		break;
+if (empty($module)) {
+	$module = getParam($_GET, "module");
 }
 
-switch(strtoupper($module)) {
-	case "APIKEY":
-		$firstName = strip_tags(stripslashes(trim(getParam($_POST ,"firstName"))));
-		$lastName = strip_tags(stripslashes(trim(getParam($_POST ,"lastName"))));
-		$eMail = strip_tags(stripslashes(trim(getParam($_POST ,"eMail"))));
-		$message = strip_tags(stripslashes(trim(getParam($_POST ,"message"))));		
-		$obj = new \stdClass;
-		$obj->ssId = session_Id();
-		$roleId = strip_tags(stripslashes(trim(getParam($_POST ,"roleId"))));
-		(new ApiKey())->execute($firstName, $lastName, $eMail, $message);
-		break;
-	case "ROLE":
-		$ssId = strip_tags(stripslashes(trim(getParam($_POST ,"ssId"))));
-		$obj = new \stdClass;
-		$obj->ssId = session_Id();
-		$roleId = strip_tags(stripslashes(trim(getParam($_POST ,"roleId"))));
-		(new UserRole())->execute($userId, $roleId);
-		break;
-	case "AVATAR":
-		$walletAddress = strip_tags(stripslashes(trim(getParam($_POST, "walletAddress"))));
-		$designerId = strip_tags(stripslashes(trim(getParam($_POST ,"designerId"))));	
-		$avatarId = strip_tags(stripslashes(trim(getParam($_POST ,"avatarId"))));		
-		$ssId = strip_tags(stripslashes(trim(getParam($_POST ,"ssId"))));
-		(new AvatarGenerator($ssId, $walletAddress))->execute();
-		break;		
-	case "HASHTAG":
-		$ssId = strip_tags(stripslashes(trim(getParam($_POST ,"ssId"))));
-		(new HashTag())->execute($ssId);
-		break;
-	case "LOGIN":
-		$identity = strip_tags(stripslashes(trim(getParam($_POST, "identity"))));
-		$passwort = strip_tags(stripslashes(trim(getParam($_POST ,"password"))));
-		$roleId = strip_tags(stripslashes(trim(getParam($_POST ,"roleId"))));		
-		$obj = new \stdClass;
-		$obj->ssId = session_Id();
-		$obj->userId = 1;
-		$obj->roleId = (intval($roleId) == 0) ? 1 : abs(intval($roleId));
-		echo json_encode($obj, JSON_UNESCAPED_UNICODE);
-		break;
-	case "LOGOUT":
-		$ssId = strip_tags(stripslashes(trim(getParam($_POST ,"ssId"))));
-		$obj = new \stdClass;
-		$obj->success = true;
-		echo json_encode($obj, JSON_UNESCAPED_UNICODE);	
-		break;
-	case "CLOSE":
-		$ssId = strip_tags(stripslashes(trim(getParam($_POST ,"ssId"))));
-		$obj = new \stdClass;
-		$obj->success = true;
-		echo json_encode($obj, JSON_UNESCAPED_UNICODE);	
-		break;	
-	case "CATEGORY":
-		$obj = new \stdClass;
-		$obj->success = true;
-		echo json_encode($obj, JSON_UNESCAPED_UNICODE);	
-	case "CREATE":
-		$sId = strip_tags(stripslashes(trim(getParam($_POST ,"ssId"))));
-		$obj = new \stdClass;
-		$obj->ssId = session_Id();
-		$obj->stageName = (new Alliteration())->getName();
-		$obj->avatarName = (new Alliteration())->getName();
-		$obj->layerName = array("background", "body", "fur", "eyes", "mouth", "accessorie");
-		echo json_encode($obj, JSON_UNESCAPED_UNICODE);	
-		break;
-	case "LAYER":
-		$designerId = strip_tags(stripslashes(trim(getParam($_POST ,"designerId"))));	
-		$avatarId = strip_tags(stripslashes(trim(getParam($_POST ,"avatarId"))));	
-		$layerId = strip_tags(stripslashes(trim(getParam($_POST ,"layerId"))));	
-		$ssId = strip_tags(stripslashes(trim(getParam($_POST ,"ssId"))));
-		$obj = new \stdClass;
-		$obj->ssId = session_Id();
-		$obj->designerId = $designerId;
-		$obj->avatarId = $avatarId;
-		$obj->layerId = $layerId;
-		$obj->counter = 1;
-		$obj->success= true;
-		echo json_encode($obj, JSON_UNESCAPED_UNICODE);	
-		break;
-	case "PROFILE":
-		$ssId = strip_tags(stripslashes(trim(getParam($_POST ,"ssId"))));
-		$firstName = strip_tags(stripslashes(trim(getParam($_POST ,"firstName"))));
-		$lastName = strip_tags(stripslashes(trim(getParam($_POST ,"lastName"))));
-		$stageName = strip_tags(stripslashes(trim(getParam($_POST ,"lastName"))));
-		$eMail = strip_tags(stripslashes(trim(getParam($_POST ,"eMail"))));
-		$imageData = strip_tags(stripslashes(trim(getParam($_POST ,"imageData"))));
-		(new Profile())->execute($ssId, $firstName, $lastName, $stageName, $eMail, $imageData);
-		break;
-	case "UPLOAD":
-		$path = __DIR__.'/file/upload/';
-		$layerId = intval(getParam($_POST, "layerId"));
-		$divId = getParam($_POST, "divId");
-		$ids = getParam($_POST, "unlink", "array");
-		(new FileUpload())->execute($_FILES, "file", $path, $layerId, $divId, $ids);
-		break;
-	case "CURRENCY":
-		echo json_encode((new Currency())->getTopTen(), JSON_UNESCAPED_UNICODE);
-		break;
-	case "DESIGNER":
-		$obj = new \stdClass;
-		$obj->success = true;
-		echo json_encode($obj, JSON_UNESCAPED_UNICODE);	
-		break;
-	case "PRICE":
-		$obj = new \stdClass;
-		$obj->success = true;
-		echo json_encode($obj, JSON_UNESCAPED_UNICODE);	
-		break;
-	case "SIGNUP":
-		$identity = strip_tags(stripslashes(trim(getParam($_POST, "identity"))));
-		$eMail = strip_tags(stripslashes(trim(getParam($_POST ,"eMail"))));
-		$roleId = strip_tags(stripslashes(trim(getParam($_POST ,"roleId"))));
-		(new SignUp())->execute($identity, $eMail, $roleId);
-		break;
-	case "TITLE":
-		echo json_encode((new Alliteration())->getTopTen(), JSON_UNESCAPED_UNICODE);
-		break;
-	default:
-		(new TestFormular())->execute($ssId = session_Id(), $module);
-		break;		
+$config = parse_ini_file($_SERVER["DOCUMENT_ROOT"] . "/api/include/db.mysql.ini");
+$mysqli = new mysqli($config['HOST'], $config['USER'], $config['PASS'], $config['NAME']);
+
+try {
+	if ($mysqli->connect_error) {
+		throw new Exception("Cannot connect to the database: ".$mysqli->connect_errno, 503);
+	}
+	$mysqli->set_charset("utf8");
+	
+	(new WhoIsOnline($mysqli))->doUpdate();	
+	
+	switch(strtoupper($module)) {
+		case "APIKEY":
+			$config = parse_ini_file($_SERVER["DOCUMENT_ROOT"] . "/api/include/mail.smtp.ini");
+			$apikey = new ApiKey($mysqli, $config);
+			if ($httpMethod == "POST") {
+				$email = getParam($_POST, "email");		
+				$password = getParam($_POST, "password");
+				$password2 = getParam($_POST, "password2");
+				$dataProtection = getParam($_POST, "dataProtection");
+				$termsOfService = getParam($_POST, "termsOfService");
+				$apikey->doPost($email, $password, $password2, $dataProtection, $termsOfService);
+			} else {
+				$token = getParam($_GET, "token");	
+				$apikey->doGet($token);
+			}
+			break;
+		case "AVATAR":
+			$address = getParam($_POST, "address");
+			$designer = getParam($_POST, "designer");	
+			$avatar = getParam($_POST, "avatar");		
+			(new Avatar($mysqli))->doPost($address);
+			break;
+		case "CATEGORY":
+			$id = getParam($_POST, "id");
+			$name = getParam($_POST, "name");	
+			$hashtag = getParam($_POST, "hashtag");			
+			(new Category($mysqli))->doPost($id, $name, $hashtag);
+			break;			
+		case "CLOSE":
+			$userId = getParam($_POST, "userId");
+			(new Close($mysqli))->doGet($userId);
+			break;	
+		case "CREATE":
+			(new Create($mysqli))->doPost();
+			break;
+		case "USERROLE":
+			$userRole = new UserRole($mysqli);
+			if ($httpMethod == "POST") {
+				$userRole->doPost();
+			} else {
+				$userId = getParam($_POST, "userId");
+				$userRole->doGet($userId);
+			}
+			break;
+		case "HASHTAG":
+			$hashtag = new HashTag($mysqli);
+			if ($httpMethod == "POST") {		
+				$id = getParam($_POST, "id");
+				$hashtag->doPost($ssId);
+			} else {
+				$hashtag->doGet();
+			}
+			break;
+		case "LAYER":
+			$id = getParam($_POST, "id");	
+			$name = getParam($_POST, "name");	
+			(new Layer())->doPost($id, $name);
+			break;
+		case "LOGIN":
+			$login = getParam($_POST, "login");
+			$password = getParam($_POST, "password");
+			(new Login())->doPost($login, $password);
+			break;
+		case "LOGOUT":
+			$userId = getParam($_POST, "userId");
+			(new Logout())->doPost($userId);
+			break;
+		case "PASSWORD":
+			$config = parse_ini_file($_SERVER["DOCUMENT_ROOT"] . "/api/include/mail.smtp.ini");
+			$password = new Password($mysqli, $config);
+			if ($httpMethod == "POST") {
+				$email = getParam($_POST, "email");		
+				$phone = getParam($_POST, "phone");
+			} else {
+				$token = getParam($_GET, "token");	
+				$password->doGet($token);
+			}
+			break;	
+		case "PROFILE":
+			$ssId = getParam($_POST, "ssId");
+			$firstName = getParam($_POST, "firstName");
+			$lastName = getParam($_POST, "lastName");
+			$stageName = getParam($_POST, "stageName");
+			$email = getParam($_POST, "email");
+			$imageData = getParam($_POST, "imageData");
+			(new Profile())->execute($ssId, $firstName, $lastName, $stageName, $email, $imageData);
+			break;
+		case "UPLOAD":
+			$path = __DIR__.'/file/upload/';
+			$layerId = intval(getParam($_POST, "layerId"));
+			$divId = getParam($_POST, "divId");
+			$unlink = getParam($_POST, "unlink", "array");
+			(new FileUpload($mysqli, $path))->doPost($_FILES["file"], $layerId, $divId, $unlink);
+			break;
+		case "CURRENCY":
+			(new Currency())->doPost();
+			break;
+		case "DESIGNER":
+			$id = getParam($_POST, "id");	
+			$name = getParam($_POST, "name");	
+			(new Designer())->doPost($id, $name);
+			break;
+		case "PRICE":
+			$layer = intval(getParam($_POST, "layer")); 
+			$price = doubleval(getParam($_POST, "price"));  
+			$currency = getParam($_POST, "currency"); 
+			(new Price($mysqli))->doPost($layer, $price, $currency);
+			break;
+		case "SIGNUP":
+			$config = parse_ini_file($_SERVER["DOCUMENT_ROOT"] . "/api/include/mail.smtp.ini");
+			$signUp = new SignUp($mysqli, $config);
+			if ($httpMethod == "POST") {
+				$email = getParam($_POST, "email");		
+				$password = getParam($_POST, "password");
+				$password2 = getParam($_POST, "password2");
+				$dataProtection = getParam($_POST, "dataProtection");
+				$termsOfService = getParam($_POST, "termsOfService");
+				$signUp->doPost($email, $password, $password2, $dataProtection, $termsOfService);
+			} else {
+				$token = getParam($_GET, "token");	
+				$signUp->doGet($token);
+			}
+			break;
+		case "TITLE":
+			(new Title())->doPost();
+			break;
+		case "WHOISONLINE":
+			(new WhoIsOnline($mysqli))->doPost();
+			break;
+		default:
+			(new TestFormular())->execute($module);
+			break;		
+	}
+} catch (Exception $e) {
+	$msg = $e->getMessage();
+	$code = $e->getCode();
+	http_response_code(($code == 0) ? 400 : $code);
+	echo sprintf("Exception occurred in: %s", $msg);
+} finally {
+	$mysqli->close();
 }

@@ -8,26 +8,28 @@ Current module available:
 
 - [ ] APIKEY
 - [x] AVATAR
-- [ ] CATEGORY
+- [X] CATEGORY
 - [x] CLOSE
-- [ ] CREATE
+- [X] CREATE
 - [x] CURRENCY
-- [ ] DESIGNER
-- [ ] HASHTAG
-- [ ] LAYER
+- [X] DESIGNER
+- [X] HASHTAG
+- [X] LAYER
 - [x] LOGIN
 - [x] LOGOUT
-- [ ] PRICE
+- [ ] PASSWORD
+- [X] PRICE
 - [ ] PROFILE
-- [x] ROLE
+- [x] USERROLE
 - [ ] SIGNUP
 - [x] TITLE
-- [ ] UPLOAD
+- [X] UPLOAD
+- [X] WHOISONLINE
 
 
 ## APIKEY
 
-The input data (First Name, Last Name, Email, How will you use the API (optional)) are stored into database. 
+The input data (First Name, Last Name, Email are stored into database. 
 To given eMail address an random link will be send. If eMail has wrong spelling, success will be false. 
 The user has to check also spam folder. Inside the email is a link with access code. 
 The link is 30 min valid. After 30 min old invalid users will be delete. 
@@ -35,7 +37,7 @@ After confirming the link an apikey is respond.
 
 Input: 
 ```
-{module : "apikey", firstName : firstName, lastName : lastName, eMail : eMail, message : message}
+{module : "apikey", firstName : firstName, lastName : lastName, eMail : eMail}
 ```
 
 Output: 
@@ -200,6 +202,12 @@ Output:
 [{pkId:1, divId:2, filename:"fur03.png" : assigned:true}]
 ```
 
+## WHOISONLINE
 
+Storing active session id in database and updating table data. Inform about counter of current online users.
+Respond last used IP address of current user.
 
-
+Output:
+```
+{"counter":18752,"ip":"221.148.61.230"}
+```

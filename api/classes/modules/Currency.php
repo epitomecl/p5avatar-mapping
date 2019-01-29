@@ -1,38 +1,26 @@
 <?php
 
-namespace avatar;
+namespace modules;
 
+/**
+* If user session is alive, a list currency will be responded.
+* All currency properties hold an "supported" attribute.
+* Intern shortname (3 chars) of crypto currency will be used. 
+*/
 class Currency {
 	private $url;
 	
 	public function __construct() {
 		$this->url = 'https://en.wikipedia.org/wiki/List_of_cryptocurrencies';
 	}
-	
-	private function fetchHtml($url) {
-		$html = "";
-		
-		if ($this->isCurl()) {
-			if ($handle = curl_init($url)) {
-				curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
-				$html = curl_exec($handle);	
-				curl_close($handle);
-			}
-		} else {
-			$html = file_get_contents($url);
-		}
-		
-		return $html;
-	}
-	
-	private function isCurl(){
-		return function_exists('curl_version');
-	}
 
-	public function getTopTen() {
+	public function doPost() {
+		echo json_encode($this->getList($this->url), JSON_UNESCAPED_UNICODE);
+	}
+	
+	private function getList($url) {
 		$currency = array();
 		$supported = array("EOS","ETH");
-		$url = $this->url;
 		$html = $this->fetchHtml($url);
 	
 		// Prevent HTML errors from displaying
@@ -110,5 +98,25 @@ class Currency {
 		}
 		
 		return $currency;
+	}
+	
+	private function fetchHtml($url) {
+		$html = "";
+		
+		if ($this->isCurl()) {
+			if ($handle = curl_init($url)) {
+				curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
+				$html = curl_exec($handle);	
+				curl_close($handle);
+			}
+		} else {
+			$html = file_get_contents($url);
+		}
+		
+		return $html;
+	}
+	
+	private function isCurl(){
+		return function_exists('curl_version');
 	}
 }

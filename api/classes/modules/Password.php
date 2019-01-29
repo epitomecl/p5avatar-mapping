@@ -1,6 +1,6 @@
 <?php
 
-namespace admin;
+namespace modules;
 
 use \mysqli as mysqli;
 use \JsonSerializable as JsonSerializable;
@@ -8,47 +8,47 @@ use \JsonSerializable as JsonSerializable;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require __DIR__.'/../common/PHPMailer/src/Exception.php';
-require __DIR__.'/../common/PHPMailer/src/PHPMailer.php';
-require __DIR__.'/../common/PHPMailer/src/SMTP.php';
+require_once __DIR__.'/../common/PHPMailer/src/Exception.php';
+require_once __DIR__.'/../common/PHPMailer/src/PHPMailer.php';
+require_once __DIR__.'/../common/PHPMailer/src/SMTP.php';
 
-class RequestPasswordReset implements JsonSerializable{
-	private $userName;
+class Password implements JsonSerializable{
+	private $mysqli;
+	private $smtpConfig;	
 	private $email;
-	private $errorCode;
-	private $errorMsg;
 	private $phone;
-	private $salt;
 	
 	public function jsonSerialize() {
 		return array(
-			'errorCode' => $this->errorCode,
-			'errorMsg' => $this->errorMsg
+			'success' => true
         );
     }
 	
-	public function __construct($userName, $email, $phone) {
-		$this->userName = $userName;
+	/**
+	* something describes this method
+	*/	
+	public function __construct($mysqli, $smtpConfig) {
+		$this->mysqli = $mysqli;
+		$this->smtpConfig = $smtpConfig;
 		$this->email = $email;
 		$this->phone = $phone;
-		$this->salt = "";
-		$this->errorCode = 0;
-		$this->errorMsg = "";
 	}
 	
-	public function execute() {
-		$config = parse_ini_file($_SERVER["DOCUMENT_ROOT"] . "/api/include/db.mysql.ini");
-		$mysqli = new mysqli($config['HOST'], $config['USER'], $config['PASS'], $config['NAME']);
-
-		$mysqli->set_charset("utf8");
+	/**
+	* something describes this method
+	*
+	* @param string $email The email for receiving request token
+	* @param string $phone The phone number
+	*/	
+	public function doPost($email, $phone) {
+		$mysqli = $this->mysqli;
 		
 		$sql = "SELECT user_name, email, phone, ";
 		$sql .= "DATEDIFF(expired, NOW()) as remaining ";
 		$sql .= "FROM users a ";
-		$sql .= "WHERE a.user_name ='%s' ";
-		$sql .= "AND a.email ='%s' ";
+		$sql .= "WHERE a.email ='%s' ";
 		$sql .= "AND a.phone ='%s' ";
-		$sql = sprintf($sql, $this->userName, $this->email, $this->phone);
+		$sql = sprintf($sql, $this->email, $this->phone);
 
 		if ($result = $mysqli->query($sql)) {
 			if ($result->num_rows > 0) {
@@ -79,6 +79,48 @@ class RequestPasswordReset implements JsonSerializable{
 		}
 				
 		$mysqli->close();
+		
+		echo json_encode($this, JSON_UNESCAPED_UNICODE);
+	}
+	
+	/**
+	* something describes this method
+	*
+	* @param string $token The request token		
+	*/	
+	public function doGet($token) {
+		$mysqli = $this->mysqli;
+		
+		/*
+		$sql = "SELECT user_name, email, phone, ";
+		$sql .= "DATEDIFF(expired, NOW()) as remaining ";
+		$sql .= "FROM users a ";
+		$sql .= "WHERE a.user_name ='%s' ";
+		$sql .= "AND a.email ='%s' ";
+		$sql .= "AND a.phone ='%s' ";
+		$sql = sprintf($sql, $this->userName, $this->email, $this->phone);
+
+		if ($result = $mysqli->query($sql)) {
+			if ($result->num_rows > 0) {
+				while ($row = $result->fetch_assoc()) {
+					$this->salt = $row["salt"];
+
+					if (strcmp($this->email, $row["email"]) != 0) {
+						$this->errorCode = 48;
+					} elseif (strcmp($this->phone, $row["phone"]) != 0) {
+						$this->errorCode = 128;
+					} elseif (intval($row["remaining"]) < 0) {
+						$this->errorCode = 255;
+					}
+				}
+				$result->free();
+			} else {
+				$this->errorCode = 64;
+			}
+		} else {
+			$this->errorCode = 1;
+		}
+		*/
 		
 		echo json_encode($this, JSON_UNESCAPED_UNICODE);
 	}

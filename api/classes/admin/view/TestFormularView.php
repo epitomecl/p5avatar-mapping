@@ -1,75 +1,133 @@
 <!DOCTYPE html>
-<html>
- <head>
-  <meta charset="charset=utf-8">
-  <title>Module Test</title>
-  <style>
-label {
-	width: 100px;
-	margin-right: 10px;
-	display:inline-block;
-}
-div {
-	margin:2px;
-	display:block;
-}
-.field {
-	width: 300px;
-}
-input {
-	box-sizing: border-box;
-}
-fieldset {
-	margin-bottom: 20px;
-}
-.settings {
-	display: inline;
-	float: left;
-}
-  </style>
-  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
- </head>
- <body>
-<form id="form" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
-<fieldset><legend>Settings</legend>
-	<div class="settings">
-		<div><label>Module:</label><select name="module" class="field">
-				<option value="APIKEY"<?php echo ((strcmp(trim($module), "APIKEY") == 0) ? " selected=\"selected\"" : ""); ?>>APIKEY</option>
-				<option value="AVATAR"<?php echo ((strcmp(trim($module), "AVATAR") == 0) ? " selected=\"selected\"" : ""); ?>>AVATAR</option>
-				<option value="CLOSE"<?php echo ((strcmp(trim($module), "CLOSE") == 0) ? " selected=\"selected\"" : ""); ?>>CLOSE</option>
-				<option value="CREATE"<?php echo ((strcmp(trim($module), "CREATE") == 0) ? " selected=\"selected\"" : ""); ?>>CREATE</option>
-				<option value="CURRENCY"<?php echo ((strcmp(trim($module), "CURRENCY") == 0) ? " selected=\"selected\"" : ""); ?>>CURRENCY</option>
-				<option value="HASHTAG"<?php echo ((strcmp(trim($module), "HASHTAG") == 0) ? " selected=\"selected\"" : ""); ?>>HASHTAG</option>
-				<option value="LAYER"<?php echo ((strcmp(trim($module), "LAYER") == 0) ? " selected=\"selected\"" : ""); ?>>LAYER</option>
-				<option value="LOGIN"<?php echo ((strcmp(trim($module), "LOGIN") == 0) ? " selected=\"selected\"" : ""); ?>>LOGIN</option>
-				<option value="LOGOUT"<?php echo ((strcmp(trim($module), "LOGOUT") == 0) ? " selected=\"selected\"" : ""); ?>>LOGOUT</option>
-				<option value="PROFILE"<?php echo ((strcmp(trim($module), "PROFILE") == 0) ? " selected=\"selected\"" : ""); ?>>PROFILE</option>
-				<option value="ROLE"<?php echo ((strcmp(trim($module), "ROLE") == 0) ? " selected=\"selected\"" : ""); ?>>ROLE</option>
-				<option value="SIGNUP"<?php echo ((strcmp(trim($module), "SIGNUP") == 0) ? " selected=\"selected\"" : ""); ?>>SIGNUP</option>
-				<option value="TITLE"<?php echo ((strcmp(trim($module), "TITLE") == 0) ? " selected=\"selected\"" : ""); ?>>TITLE</option>
-				<option value="UPLOAD"<?php echo ((strcmp(trim($module), "UPLOAD") == 0) ? " selected=\"selected\"" : ""); ?>>UPLOAD</option>
-		</select></div>
-		<div><label>Identity:</label><input type="text" class="field" value="" placeholder="identity" name="identity" /></div>
-		<div><label>Password:</label><input type="text" class="field" value="" placeholder="password" name="password" /></div>
-		<div><label>ssId:</label><input type="text" class="field" value="<?php echo trim($ssId); ?>" placeholder="ssId" name="ssId" /></div>		
-		<div><label>WalletAddress:</label><input type="text" class="field" value="" placeholder="walletAddress" name="walletAddress" /></div>
-		<div><label></label><input type="submit" class="field" value="submit" /></div>
-	</div>
-</fieldset>
-<fieldset><legend>Avatar</legend>
-	<div class="settings">
-		<div><label>WalletAddress:</label><input type="text" class="field" value="" placeholder="walletAddress" id="walletAddress" /></div>
-		<div><label></label><input type="button" class="field" id="generator" value="check" /></div>
-		<div>
-			<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="avatar256" width="256" title="256">
-			<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="avatar128" width="128" title="128">
-			<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="avatar64" width="64" title="64">
+<html lang="en">
+<head>
+  <title>Api Avarkey Modules</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="jumbotron text-center mb-3">
+  <h1>Api Avarkey</h1>
+  <p>Test each module separately and checkout your possible personal avartar based on your walletAddress</p> 
+</div>
+<div class="container mb-3">
+<div class="card">
+  <div class="card-header">Settings</div>
+  <div class="card-body">
+		<div class="form-group">
+			<label for="module">module:</label>
+			<select id="module" class="form-control">
+			<option value="">Please select...</option>
+		<?php foreach ($modules as $data) { ?>
+			<option value="<?php echo $data->name; ?>" <?php echo (($data->selected) ? "selected=\"selected\"" : ""); ?>><?php echo $data->name; ?></option>
+		<?php } ?>
+			</select>
+		</div>
+		<?php foreach ($modules as $data) { ?>
+			<p class="card-text text-info paramset <?php echo strtolower($data->name); ?>" <?php echo ((!$data->selected) ? "style=\"display:none;\"" : ""); ?>>
+				<?php echo $data->description; ?>
+			</p>
+			<?php foreach ($data->blocks as $key => $params) { ?>
+			<form method="<?php echo $key; ?>" action="<?php echo $_SERVER['PHP_SELF']; ?>" class="paramset <?php echo strtolower($data->name); ?>" <?php echo ((!$data->selected) ? "style=\"display:none;\"" : ""); ?>>
+				<input type="hidden" name="module" value="<?php echo strtolower($data->name); ?>" />
+				<div class="card mb-3 border-info">
+					<div class="card-header"><?php echo $key; ?></div>
+					<div class="card-body">
+				<?php foreach ($params as $index => $input) { ?>
+				<div class="form-group">
+					<label for="<?php echo $id; ?>"><?php echo $input->label; ?>:</label>
+					<input type="<?php echo $input->input; ?>" class="form-control" value="" placeholder="<?php echo $input->placeholder; ?>" id="<?php echo $input->id; ?>" name="<?php echo $input->name; ?>" />
+				</div>
+				<?php } ?>
+				<div class="form-check mb-3">
+					<input type="checkbox" class="form-check-input" id="directOutput_<?php echo strtolower($data->name); ?>">
+					<label class="form-check-label" for="directOutput_<?php echo strtolower($data->name); ?>">Check me for direct json output</label>
+				</div>
+				<button type="button" class="btn btn-primary moduletest">Submit</button>
+					</div>
+				</div>  
+			</form>	
+			<?php } ?>
+		<?php } ?>
+  </div>
+  <div class="card-footer">
+	<div class="container-fluid">
+		<div class="form-group">
+			<label for="exampleFormControlTextarea1">Result:</label>
+			<textarea class="form-control" id="jsondata" rows="3"></textarea>
 		</div>
 	</div>
-</fieldset>
+  </div>  
+</div>		
+</div>
+<div class="container mb-2">
+<form id="avatarform" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+<div class="card">
+  <div class="card-header">Avatar Life Preview</div>
+  <div class="card-body">
+		<div class="form-group">
+		<label for="walletAddress">Wallet address:</label>
+		<input type="text" class="form-control" value="" placeholder="Please insert your wallet address..." id="walletAddress" />
+		</div>
+		<button type="button" id="generator" class="btn btn-primary">Submit</button>
+  </div> 
+  <div class="card-footer">
+	<div class="container-fluid d-none">
+		<img class="float-left" style="margin:5px; width:50%" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="avatar256" alt="256">
+		<img class="float-left" style="margin:5px; width:25%" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="avatar128" alt="128">
+		<img class="float-left" style="margin:5px; width:12.5%" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" id="avatar64" alt="64">
+	</div>
+  </div>
+</div>
 </form>
-
+</div>
+<div class="jumbotron text-center" style="margin-bottom:0">
+  <p>Copyright © EpitomeCL 2018</p>
+</div>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
 <script type="text/javascript">
+$( document ).ready(function() {
+	$(".paramset").hide();
+	$(".paramset :input").prop("disabled", true);
+	
+	if ($("#module").val() != "") {
+		$(".paramset." + $("#module").val().toLowerCase()).show();
+		$(".paramset." + $("#module").val().toLowerCase() + " :input").prop("disabled", false);
+	}
+});
+
+$("#module").on("change", function(event) {
+	event.preventDefault();
+	event.stopPropagation();
+	
+	$(".paramset").hide();
+	$(".paramset :input").prop("disabled", true);
+	$(".paramset." + this.value.toLowerCase()).show();
+	$(".paramset." + this.value.toLowerCase() + " :input").prop("disabled", false);
+	$("#jsondata").text("");
+});
+
+$(".moduletest").on("click", function(event) {
+	event.preventDefault();
+	event.stopPropagation();
+	
+	var form = $(this).parents('form:first');
+
+	if ($("#module").val() != "") {
+		if (form.find(".form-check-input").prop("checked")) {
+			form.submit();
+		} else if (form.prop("method") == "post") {
+			requestPost(form.serialize());
+		} else {
+			requestGet(form.serialize());
+		}
+	}
+});
+
 $("#walletAddress").on("change keyup", function(event) {
 	event.preventDefault();
 	event.stopPropagation();
@@ -84,9 +142,33 @@ $("#generator").on("click", function(event) {
 	requestAvatar($("#walletAddress").val());
 });
 
-function requestAvatar(walletAddress) {
+function requestGet(data) {
+	$.get(
+		"/api/", data
+	).done(
+		function( data ) {
+			$("#jsondata").text(data);
+		}
+	).fail( function(xhr, textStatus, error) {
+        $("#jsondata").text(xhr.status + " :: " + xhr.statusText + " :: " + xhr.responseText);
+    });
+}
+
+function requestPost(data) {
 	$.post(
-		"/api/", { module: "AVATAR", walletAddress: walletAddress }
+		"/api/", data
+	).done(
+		function( data ) {
+			$("#jsondata").text(data);
+		}
+	).fail( function(xhr, textStatus, error) {
+        $("#jsondata").text(xhr.status + " :: " + xhr.statusText + " :: " + xhr.responseText);
+    });
+}
+
+function requestAvatar(address) {
+	$.post(
+		"/api/", { module: "AVATAR", address: address }
 	).done(
 		function( data ) {
 			var obj = jQuery.parseJSON(data);
@@ -95,12 +177,7 @@ function requestAvatar(walletAddress) {
 			$("#avatar128").attr("src", obj.imageData);
 			$("#avatar64").attr("src", obj.imageData);
 			
-			$('#avatars').find('img').each(function(i) { 
-				if ($(this).prop("title") == obj.walletAddress) {
-					$(this).prop("src", obj.imageData);
-					return false;
-				}
-			}); 
+			$("#avatar256").parent().removeClass("d-none");
 		}
 	);
 }
@@ -115,6 +192,8 @@ $(document).ready(function(){
     });
 });
 </script>
+
+
 </body>
 </html>
 
