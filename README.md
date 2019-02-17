@@ -64,15 +64,15 @@ https://api.avarkey.com/api/
 
 | A - C | D - P | P - W
 | ------------- | ------------- | ----------- |
-|[x] ADDRESS	|[X] DESIGNER	|[x] PROFILE |
-|[x] ALIAS		|[X] HASHTAG	|[x] USERROLE |
-|[x] APIKEY		|[X] LAYER		|[x] SIGNUP	|
+|[x] ADDRESS	|[x] DESIGNER	|[x] PROFILE |
+|[x] ALIAS		|[x] HASHTAG	|[x] USERROLE |
+|[x] APIKEY		|[x] LAYER		|[x] SIGNUP	|
 |[x] AVATAR		|[x] LOGIN		|[x] TITLE	|
-|[X] BOOKING	|[x] LOGOUT		|[X] UPLOAD	|
-|[X] CATEGORY	|[x] PASSWORD	|	|
-|[x] CLOSE		|[X] PAYMENT	|	|
-|[X] CREATE		|[x] PREVIEW	|	|
-|[x] CURRENCY	|[X] PRICE		|[X] WHOISONLINE |
+|[x] BOOKING	|[x] LOGOUT		|[x] UPLOAD	|
+|[x] CATEGORY	|[x] PASSWORD	|	|
+|[x] CLOSE		|[x] PAYMENT	|	|
+|[x] CREATE		|[x] PREVIEW	|	|
+|[x] CURRENCY	|[x] PRICE		|[x] WHOISONLINE |
 		
 
 ## ADDRESS
