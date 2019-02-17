@@ -27,22 +27,25 @@ class HashTag implements JsonSerializable{
 	/**
 	* something describes this method
 	*
-	* @param int $id The id of category
+	* @param int $categoryId The id of category
 	*/	
-	public function doPost($id) {
+	public function doPost($categoryId) {
 		$mysqli = $this->mysqli;
 		
+		$data = array();
 		$sql = "SELECT DISTINCT hashtag FROM hashtag WHERE categoryId=%d";
-		$sql = sprintf($sql, $id);
+		$sql = sprintf($sql, $categoryId);
+		
 		if ($result = $mysqli->query($sql)) {
-			$this->hashtags = array();
 			while ($row = $result->fetch_assoc()) {
-				array_push($this->hashtags, trim($row["hashtag"]));
+				array_push($data, trim($row["hashtag"]));
 			}
 		} else {
 			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
 		}			
 		
+		$this->hashtags = $data;
+					
 		echo json_encode($this, JSON_UNESCAPED_UNICODE);			
 	}
 	

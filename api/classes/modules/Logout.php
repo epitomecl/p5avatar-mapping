@@ -29,21 +29,31 @@ class Logout {
 	public function doPost($userId) {
 		$mysqli = $this->mysqli;
 		
-		if (!$this->hasUserLogin($mysqli, $userId)) {
-			throw new Exception(sprintf("%s, %s", get_class($this), "User not exist."), 404);
-		} else {
+		if ($this->hasUserLogin($mysqli, $userId)) {
 			$sql = "DELETE FROM user_login WHERE userId = %d";
 			$sql = sprintf($sql, intval($userId));
 			if ($mysqli->query($sql) === false) {
 				throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
-			} else {
-				if ($mysqli->affected_rows == 0) {
-					throw new Exception(sprintf("%s, %s", get_class($this), "User not exist."), 404);
-				}
 			}
+			
+			$this->deleteSession();
 		}
 		
 		echo json_encode($this, JSON_UNESCAPED_UNICODE);			
+	}
+	
+	private function deleteSession() {
+		// delete all session values
+		$_SESSION = array();
+
+		// delete session cookie
+		if (ini_get("session.use_cookies")) {
+			$params = session_get_cookie_params();
+			setcookie(session_name(), '', time() - 42000, $params["path"], $params["domain"], $params["secure"], $params["httponly"]);
+		}
+
+		// delete session itself
+		session_destroy();		
 	}
 	
 	private function hasUserLogin($mysqli, $userId) {

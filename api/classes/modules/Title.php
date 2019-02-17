@@ -4,6 +4,9 @@ namespace modules;
 
 use common\Alliteration as Alliteration;
 
+/**
+* If user session is alive, 10 random proposals of an titel, label or description for category or layer will be generated. 
+*/
 class Title {
 	
 	public function __construct() {

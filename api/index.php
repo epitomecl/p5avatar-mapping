@@ -8,18 +8,21 @@ use \Exception as Exception;
 
 use admin\TestFormular as TestFormular;
 
+use modules\Address as Address;
+use modules\Alias as Alias;
 use modules\ApiKey as ApiKey;
 use modules\Avatar as Avatar;
+use modules\Booking as Booking;
 use modules\Category as Category;
 use modules\Close as Close;
 use modules\Create as Create;
 use modules\Currency as Currency;
-use modules\Designer as Designer;
 use modules\HashTag as HashTag;
 use modules\Layer as Layer;
 use modules\Login as Login;
 use modules\Logout as Logout;
 use modules\Password as Password;
+use modules\Payment as Payment;
 use modules\Price as Price;
 use modules\Profile as Profile;
 use modules\SignUp as SignUp;
@@ -27,6 +30,7 @@ use modules\Title as Title;
 use modules\Upload as Upload;
 use modules\UserRole as UserRole;
 use modules\WhoIsOnline as WhoIsOnline;
+use modules\Preview as Preview;
 
 // Allow CORS
 if (isset($_SERVER['HTTP_ORIGIN'])) {
@@ -79,6 +83,23 @@ try {
 	(new WhoIsOnline($mysqli))->doUpdate();	
 	
 	switch(strtoupper($module)) {
+		case "ADDRESS":
+			$address = new Address($mysqli);
+			if ($httpMethod == "POST") {
+				$userId = getParam($_POST, "userId");	
+				$avatarId = getParam($_POST, "avatarId");	
+				$address = getParam($_POST, "address");					
+				$address->doPost($userId, $avatarId, $address);
+			} else {
+				$userId = getParam($_POST, "userId");	
+				$address->doGet($userId);
+			}
+			break;		
+		case "ALIAS":
+			$userId = getParam($_POST, "userId");	
+			$alias = getParam($_POST, "alias");	
+			(new Alias($mysqli))->doPost($userId, $alias);
+			break;		
 		case "APIKEY":
 			$config = parse_ini_file($_SERVER["DOCUMENT_ROOT"] . "/api/include/mail.smtp.ini");
 			$apikey = new ApiKey($mysqli, $config);
@@ -86,8 +107,8 @@ try {
 				$email = getParam($_POST, "email");		
 				$password = getParam($_POST, "password");
 				$password2 = getParam($_POST, "password2");
-				$dataProtection = getParam($_POST, "dataProtection");
-				$termsOfService = getParam($_POST, "termsOfService");
+				$dataProtection = getParam($_POST, "dataProtection", "int");
+				$termsOfService = getParam($_POST, "termsOfService", "int");
 				$apikey->doPost($email, $password, $password2, $dataProtection, $termsOfService);
 			} else {
 				$token = getParam($_GET, "token");	
@@ -95,23 +116,155 @@ try {
 			}
 			break;
 		case "AVATAR":
-			$address = getParam($_POST, "address");
-			$designer = getParam($_POST, "designer");	
-			$avatar = getParam($_POST, "avatar");		
-			(new Avatar($mysqli))->doPost($address);
+			$avatar = new Avatar($mysqli);
+			if ($httpMethod == "POST") {
+				$address = getParam($_POST, "address");
+				$avatar->doPost($address);
+			} else {
+				$address = getParam($_POST, "address");
+				$avatar->doGet($address);
+			}
 			break;
+		case "BOOKING":
+			$userId = getParam($_POST, "userId");
+			$fileIds = getParam($_POST, "fileIds", "array"); 
+			(new Booking($mysqli))->doPost($userId, $fileIds);
+			break;			
 		case "CATEGORY":
-			$id = getParam($_POST, "id");
+			$categoryId = getParam($_POST, "categoryId");
 			$name = getParam($_POST, "name");	
 			$hashtag = getParam($_POST, "hashtag");			
-			(new Category($mysqli))->doPost($id, $name, $hashtag);
+			(new Category($mysqli))->doPost($categoryId, $name, $hashtag);
 			break;			
 		case "CLOSE":
 			$userId = getParam($_POST, "userId");
 			(new Close($mysqli))->doGet($userId);
 			break;	
 		case "CREATE":
-			(new Create($mysqli))->doPost();
+			$userId = getParam($_POST, "userId");		
+			(new Create($mysqli))->doPost($userId);
+			break;
+		case "CURRENCY":
+			(new Currency())->doPost();
+			break;
+		case "HASHTAG":
+			$hashtag = new HashTag($mysqli);
+			if ($httpMethod == "POST") {		
+				$categoryId = getParam($_POST, "categoryId");
+				$hashtag->doPost($categoryId);
+			} else {
+				$hashtag->doGet();
+			}
+			break;
+		case "LAYER":
+			$layer = new Layer($mysqli);
+			if ($httpMethod == "POST") {
+				$categoryId = getParam($_POST, "categoryId", "int");	
+				$name = getParam($_POST, "name");
+				$position = getParam($_POST, "position", "int");
+				$layer->doPost($categoryId, $name, $position);
+			} elseif ($httpMethod == "PUT") {
+				$categoryId = getParam($_POST, "categoryId", "int");
+				$name = getParam($_POST, "name");
+				$position = getParam($_POST, "position", "int");
+				$layer->doPut($categoryId, $name, $position);				
+			}
+			break;
+		case "LOGIN":
+			$email = getParam($_POST, "email");
+			$password = getParam($_POST, "password");
+			(new Login($mysqli))->doPost($email, $password);
+			break;
+		case "LOGOUT":
+			$userId = getParam($_POST, "userId", "int");
+			(new Logout($mysqli))->doPost($userId);
+			break;
+		case "PASSWORD":
+			$config = parse_ini_file($_SERVER["DOCUMENT_ROOT"] . "/api/include/mail.smtp.ini");
+			$password = new Password($mysqli, $config);
+			if ($httpMethod == "POST") {
+				$email = getParam($_POST, "email");		
+				$phone = getParam($_POST, "phone");
+			} elseif ($httpMethod == "PUT") {
+				$token = getParam($_POST, "token");		
+				$password = getParam($_POST, "password");		
+				$password2 = getParam($_POST, "password2");
+				$password->doPut($token, $password, $password2);
+			} else {
+				$token = getParam($_GET, "token");	
+				$password->doGet($token);
+			}
+			break;
+		case "PAYMENT":
+			$payment = new Payment($mysqli, $config);
+			if ($httpMethod == "POST") {		
+				$userId = getParam($_POST, "userId", "int");
+				$fileIds = getParam($_POST, "fileIds", "array"); 
+				$payment->doPost($userId, $fileIds);
+			} elseif ($httpMethod == "PUT") {
+				$userId = getParam($_POST, "userId", "int");
+				$fileIds = getParam($_POST, "fileIds", "array"); 
+				$payment->doPut($userId, $fileIds);				
+			}  elseif ($httpMethod == "DEL") {
+				$userId = getParam($_POST, "userId", "int");
+				$fileIds = getParam($_POST, "fileIds", "array");
+				$payment->doDel($userId, $fileIds);		
+			} else {
+				$userId = getParam($_POST, "userId", "int");
+				$fileIds = getParam($_POST, "fileIds", "array");
+				$payment->doGet($userId, $fileIds);					
+			}
+			break;			
+		case "PREVIEW":
+			$fileIds = getParam($_POST, "fileIds", "array"); 
+			(new Preview($mysqli))->doPost($fileIds);
+			break;			
+		case "PRICE":
+			$priceId = intval(getParam($_POST, "priceId", "int")); 
+			$price = doubleval(getParam($_POST, "price"));  
+			$currency = getParam($_POST, "currency"); 
+			(new Price($mysqli))->doPost($priceId, $price, $currency);
+			break;
+		case "PROFILE":
+			$profile = new Profile($mysqli);
+			if ($httpMethod == "POST") {
+				$userId = intval(getParam($_POST, "userId")); 
+				$firstName = getParam($_POST, "firstName");
+				$lastName = getParam($_POST, "lastName");
+				$alias = getParam($_POST, "alias");
+				$email = getParam($_POST, "email");
+				$file = $_FILES["file"];
+				$imageData = getParam($_POST, "imageData");
+				$profile->doPost($userId, $firstName, $lastName, $alias, $email, $file, $imageData);
+			} else {
+				$userId = intval(getParam($_GET, "userId")); 
+				$profile->doGet($userId);				
+			}
+			break;
+		case "SIGNUP":
+			$config = parse_ini_file($_SERVER["DOCUMENT_ROOT"] . "/api/include/mail.smtp.ini");
+			$signUp = new SignUp($mysqli, $config);
+			if ($httpMethod == "POST") {
+				$email = getParam($_POST, "email");		
+				$password = getParam($_POST, "password");
+				$password2 = getParam($_POST, "password2");
+				$dataProtection = getParam($_POST, "dataProtection", "int");
+				$termsOfService = getParam($_POST, "termsOfService", "int");
+				$signUp->doPost($email, $password, $password2, $dataProtection, $termsOfService);
+			} else {
+				$token = getParam($_GET, "token");	
+				$signUp->doGet($token);
+			}
+			break;
+		case "TITLE":
+			(new Title())->doPost();
+			break;
+		case "UPLOAD":
+			$file = $_FILES["file"];
+			$layerId = intval(getParam($_POST, "layerId"));
+			$divId = getParam($_POST, "divId");
+			$unlink = getParam($_POST, "unlink", "array");
+			(new FileUpload($mysqli, $path))->doPost($file, $layerId, $divId, $unlink);
 			break;
 		case "USERROLE":
 			$userRole = new UserRole($mysqli);
@@ -121,88 +274,6 @@ try {
 				$userId = getParam($_POST, "userId");
 				$userRole->doGet($userId);
 			}
-			break;
-		case "HASHTAG":
-			$hashtag = new HashTag($mysqli);
-			if ($httpMethod == "POST") {		
-				$id = getParam($_POST, "id");
-				$hashtag->doPost($ssId);
-			} else {
-				$hashtag->doGet();
-			}
-			break;
-		case "LAYER":
-			$id = getParam($_POST, "id");	
-			$name = getParam($_POST, "name");	
-			(new Layer())->doPost($id, $name);
-			break;
-		case "LOGIN":
-			$login = getParam($_POST, "login");
-			$password = getParam($_POST, "password");
-			(new Login())->doPost($login, $password);
-			break;
-		case "LOGOUT":
-			$userId = getParam($_POST, "userId");
-			(new Logout())->doPost($userId);
-			break;
-		case "PASSWORD":
-			$config = parse_ini_file($_SERVER["DOCUMENT_ROOT"] . "/api/include/mail.smtp.ini");
-			$password = new Password($mysqli, $config);
-			if ($httpMethod == "POST") {
-				$email = getParam($_POST, "email");		
-				$phone = getParam($_POST, "phone");
-			} else {
-				$token = getParam($_GET, "token");	
-				$password->doGet($token);
-			}
-			break;	
-		case "PROFILE":
-			$ssId = getParam($_POST, "ssId");
-			$firstName = getParam($_POST, "firstName");
-			$lastName = getParam($_POST, "lastName");
-			$stageName = getParam($_POST, "stageName");
-			$email = getParam($_POST, "email");
-			$imageData = getParam($_POST, "imageData");
-			(new Profile())->execute($ssId, $firstName, $lastName, $stageName, $email, $imageData);
-			break;
-		case "UPLOAD":
-			$path = __DIR__.'/file/upload/';
-			$layerId = intval(getParam($_POST, "layerId"));
-			$divId = getParam($_POST, "divId");
-			$unlink = getParam($_POST, "unlink", "array");
-			(new FileUpload($mysqli, $path))->doPost($_FILES["file"], $layerId, $divId, $unlink);
-			break;
-		case "CURRENCY":
-			(new Currency())->doPost();
-			break;
-		case "DESIGNER":
-			$id = getParam($_POST, "id");	
-			$name = getParam($_POST, "name");	
-			(new Designer())->doPost($id, $name);
-			break;
-		case "PRICE":
-			$layer = intval(getParam($_POST, "layer")); 
-			$price = doubleval(getParam($_POST, "price"));  
-			$currency = getParam($_POST, "currency"); 
-			(new Price($mysqli))->doPost($layer, $price, $currency);
-			break;
-		case "SIGNUP":
-			$config = parse_ini_file($_SERVER["DOCUMENT_ROOT"] . "/api/include/mail.smtp.ini");
-			$signUp = new SignUp($mysqli, $config);
-			if ($httpMethod == "POST") {
-				$email = getParam($_POST, "email");		
-				$password = getParam($_POST, "password");
-				$password2 = getParam($_POST, "password2");
-				$dataProtection = getParam($_POST, "dataProtection");
-				$termsOfService = getParam($_POST, "termsOfService");
-				$signUp->doPost($email, $password, $password2, $dataProtection, $termsOfService);
-			} else {
-				$token = getParam($_GET, "token");	
-				$signUp->doGet($token);
-			}
-			break;
-		case "TITLE":
-			(new Title())->doPost();
 			break;
 		case "WHOISONLINE":
 			(new WhoIsOnline($mysqli))->doPost();

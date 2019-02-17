@@ -46,6 +46,25 @@ class Upload {
 		return $files;
 	}
 	
+	private function getCategoryName($mysqli, $layerId) {
+		$value = "";
+		$sql = "SELECT CONCAT(category.name,'_',category.id,'/') AS categoryName, layer.layerId FROM layer ";
+		$sql .= "LEFT JOIN category ON (category.id = layer.categoryId) ";
+		$sql .= "WHERE layerId=%d";
+		$sql = sprintf($sql, $layerId);
+
+		if ($result = $mysqli->query($sql)) {
+			while ($row = $result->fetch_assoc()) {
+				$value = trim($row["categoryName"]);
+			}
+			$result->free();
+		} else {
+			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+		}
+
+		return $value;
+	}
+	
 	/**
 	* something describes this method
 	*
@@ -57,22 +76,28 @@ class Upload {
 	public function doPost($file, $layerId, $divId, $unlink) {
 		$mysqli = $this->mysqli;
 		$uploads = $this->reArrayFiles($file);
-		$path = $this->path;
+		$path = dirname(__FILE__).'/../../images/presets/';
 		$files = array();	
-
+		
 		// remove unlinked files
 		foreach ($unlink as $id) {
 			$fileId = intval($id);
-			$sql = sprintf("SELECT filename, original FROM file WHERE id=%d", $fileId);
+			$sql = "SELECT CONCAT(category.name,'_',category.id,'/') AS categoryName, file.original, file.filename ";
+			$sql .= "FROM file ";
+			$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
+			$sql .= "LEFT JOIN category ON (category.id = layer.categoryId) ";
+			$sql .= sprintf("WHERE file.id = %d", $fileId);
+			$sql .= "ORDER BY layer.position ";
 			$result = $mysqli->query($sql);
 			while ($row = $result->fetch_array()){
-				$filename = $row["filename"];
+				$categoryName = $row["categoryName"];
+				$fileName = $row["filename"];
 				$original = $row["original"];
 				
-				if (file_exists($path.$filename)) {
-					unlink($path.$filename);
+				if (file_exists($path.$categoryName.$fileName)) {
+					unlink($path.$categoryName.$fileName);
 				}
-				if (!file_exists($path.$filename)) {
+				if (!file_exists($path.$fileName)) {
 					$sql = sprintf("DELETE FROM file WHERE id=%d", $fileId);
 					$mysqli->query($sql);
 					
@@ -80,29 +105,39 @@ class Upload {
 					$obj->divId = $div;
 					$obj->fileId = $fileId;
 					$obj->assigned = false;
-					$obj->filename = $filename;
+					$obj->fileName = $fileName;
 					$obj->original = $original;
 					array_push($files, $obj);			
 				}
 			}
 		}
 
+		$categoryName = $this->getCategoryName($mysqli, $layerId);
+		
+		if (strlen($categoryName) == 0) {
+			throw new Exception(sprintf("%s, %s", get_class($this), 'Precondition Failed'), 412);
+		}
+		
+		if (!file_exists($path.$categoryName)) {
+			mkdir($path.$categoryName, 0777, true);
+		}
+		
 		// move uploaded files
 		foreach ($uploads as $key => $file) {
 			if (intval($file["error"]) == UPLOAD_ERR_OK) {
 				$tmp_name = $file["tmp_name"];
 				$original = $file["name"];
-				$file_ext = strtolower(end(explode('.', $original)));
-				$filename = sprintf("%d_%s.%s", time(), md5($original), $file_ext);
-				$moved = move_uploaded_file($tmp_name, $path.$filename);
+				$tmp = explode('.', $original);
+				$extension = strtolower(end($tmp));
+				$fileName = sprintf("%s.%s", md5($original.time()), $extension);
+				$moved = move_uploaded_file($tmp_name, $path.$categoryName.$fileName);
 
 				if( $moved ) {
 					$obj = new stdclass;
 					$obj->divId = $divId;
 					$obj->fileId = 0;
 					$obj->assigned = false;
-					$obj->filename = $filename;
-					$obj->moved = true;
+					$obj->fileName = $fileName;
 					$obj->original = $original;
 					array_push($files, $obj);
 				}			
@@ -116,17 +151,14 @@ class Upload {
 		} else {
 			// insert uploaded files
 			foreach ($files as $key => $obj) {
-				$filename = $obj->filename;
+				$fileName = $obj->fileName;
 				$original = $obj->original;
 				$fileId = $obj->fileId;
-				$sql = sprintf("INSERT INTO file SET filename='%s', original='%s', layerId=%d, userId=%d", $filename, $original, $layerId, $userId);
 					
 				if (empty($fileId)) {
-					$result = $mysqli->query($sql);
-
-					if ($result === TRUE) {
+					$sql = sprintf("INSERT INTO file SET filename='%s', original='%s', layerId=%d, userId=%d", $fileName, $original, $layerId, $userId);					
+					if ($result = $mysqli->query($sql) === TRUE) {
 						$obj->fileId = $mysqli->insert_id;
-						$obj->restore = true;
 						$obj->assigned = true;
 					}
 				}

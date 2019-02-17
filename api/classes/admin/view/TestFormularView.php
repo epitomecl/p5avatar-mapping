@@ -37,13 +37,13 @@
 					<div class="card-body">
 				<?php foreach ($params as $index => $input) { ?>
 				<div class="form-group">
-					<label for="<?php echo $id; ?>"><?php echo $input->label; ?>:</label>
+					<label for="<?php echo $input->id; ?>"><?php echo $input->label; ?>:</label>
 					<input type="<?php echo $input->input; ?>" class="form-control" value="" placeholder="<?php echo $input->placeholder; ?>" id="<?php echo $input->id; ?>" name="<?php echo $input->name; ?>" />
 				</div>
 				<?php } ?>
 				<div class="form-check mb-3">
 					<input type="checkbox" class="form-check-input" id="directOutput_<?php echo strtolower($data->name); ?>">
-					<label class="form-check-label" for="directOutput_<?php echo strtolower($data->name); ?>">Check me for direct json output</label>
+					<label class="form-check-label" for="directOutput_<?php echo strtolower($data->name); ?>">Check me for direct output</label>
 				</div>
 				<button type="button" class="btn btn-primary moduletest">Submit</button>
 					</div>

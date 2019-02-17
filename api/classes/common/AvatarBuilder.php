@@ -1,46 +1,11 @@
 <?php 
 namespace common;
 
-use \JsonSerializable as JsonSerializable;
+use \Exception as Exception;
 
-class AvatarBuilder implements JsonSerializable {
-	
-	public function jsonSerialize()
-	{
-		return array(
-			'ssid' => $this->ssID,
-			'address' => $this->address,
-			'hashData' => $this->hashData,
-			'prefix' => $this->prefix,
-			'category' => $this->category,
-			'parts' => $this->parts,
-			'imageData' => $this->imageData,
-			'errorCode' => $this->errorCode
-		);
-    }
-
-	private $prefix;
-	private $parts;
-	private $category;
-	private $address;
-	private $hashData;
-	private $imageData;
-    private $errorCode;
-	private $ssID;
+class AvatarBuilder {
 	
 	public function __construct() {
-		$this->ssID = "";
-		$this->prefix = "";
-		$this->parts = array();
-		$this->category = "";
-		$this->hashData = "";
-		$this->imageData = "";
-        $this->errorCode = 0;
-		$this->address = "";
-	}
-	
-	public function setSSID($ssID){
-		$this->ssID = trim($ssID);
 	}
 	
 	private function imagefillroundedrect($im,$x,$y,$cx,$cy,$rad,$col) {
@@ -57,52 +22,33 @@ class AvatarBuilder implements JsonSerializable {
 		imagefilledellipse($im, $cx-$rad, $y+$rad, $rad*2, $dia, $col);
 	}
 	
-
-	
-	public function setAddress($address) {
-		$hash = hash('sha256', $address);			
-		$width = 256;
-		$height = 256;
-
-		$im = imagecreatetruecolor($width, $height);
-		$snow = imagecolorallocate($im, 255, 250, 250);
-		$white = imagecolorallocate($im, 255, 255, 255);
-		imagefill($im, 0, 0, $white);
-
-		$prefix = "";
-		$object = $this->defaultCat($hash, $prefix);
-		$im = $object->avatar;
-				
+	private function prepareBackground($image) {
+		$data = NULL;
+		$width = intval(imagesx($image));
+		$height = intval(imagesy($image));
 		//create masking
 		$mask = imagecreatetruecolor($width, $height);
-		
 		$white   = imagecolorallocate($mask, 255, 255, 255);
 		imagefill($mask, 0, 0, $white);
-		
+		// transparent rounded backgound
 		$transparent = imagecolorallocate($mask, 255, 0, 0);
 		imagecolortransparent($mask, $transparent);
 		$this->imagefillroundedrect($mask, 0, 0, $width, $height, 10, $transparent);
 
-		imagecopymerge($im, $mask, 0, 0, 0, 0, $width, $height, 100);
-		imagecolortransparent($im, $white);
-		//imagefill($im, 0, 0, $white);		
+		imagecopymerge($image, $mask, 0, 0, 0, 0, $width, $height, 100);
+		imagecolortransparent($image, $white);
 		
 		ob_start();
-		imagepng($im);
+		imagepng($image);
 		$data = ob_get_contents();
 		ob_end_clean(); 
 		
-		$this->prefix = $prefix;
-		$this->parts = $object->parts;
-		$this->category = $object->category;
-		$this->address = $address;
-		$this->hashData = $hash;
-		$this->imageData = sprintf("data:image/png;base64,%s", base64_encode($data));
+		return $data;
 	}
 	
-	public function defaultCat($seed='', $prefix='') {
-    // init random seed
-		if($seed) srand( hexdec(substr(md5($prefix.$seed),0,6)) );
+	private function defaultAvatar($seed='') {
+		// init random seed
+		if($seed) srand( hexdec(substr(md5($seed),0,6)) );
 
 		// throw the dice for body parts
 		$parts = array(
@@ -115,10 +61,9 @@ class AvatarBuilder implements JsonSerializable {
 		);
 
 		// create backgound
-		$monster = imagecreatetruecolor(256, 256) or die("GD image create failed");
-		//$monster = imagecreatefrompng(__DIR__."/../../img/background.png");
-		$white   = imagecolorallocate($monster, 255, 255, 255);
-		imagefill($monster,0,0,$white);
+		$avatar = imagecreatetruecolor(256, 256) or die("GD image create failed");
+		$white   = imagecolorallocate($avatar, 255, 255, 255);
+		imagefill($avatar,0,0,$white);
 
 		// add parts
 		foreach($parts as $part => $num){
@@ -127,22 +72,157 @@ class AvatarBuilder implements JsonSerializable {
 			$im = imagecreatefrompng($file);
 			if(!$im) die('Failed to load '.$file);
 			imageSaveAlpha($im, true);
-			imagecopy($monster,$im,0,0,0,0,256,256);
+			imagecopy($avatar,$im,0,0,0,0,256,256);
 			imagedestroy($im);
 		}
-
+	
 		// restore random seed
 		if($seed) srand();
 		
 		$data = new \stdClass;
 		$data->category = "cat";
 		$data->parts = $parts;
-		$data->avatar = $monster;
+		$data->avatar = $avatar;
 		
 		return $data;
 	}
+
+	public function buildAvatar($address) {
+		$hash = hash('sha256', $address);			
+		$object = $this->defaultAvatar($hash);
+		$image = $object->avatar;
+		$source = $this->prepareBackground($image);
+		
+		$data = new \stdClass;
+		$data->address = $address;
+		$data->sha256 = $hash;
+		$data->category = $object->category;		
+		$data->parts = $object->parts;
+		$data->imageData = sprintf("data:image/png;base64,%s", base64_encode($source));
+
+		return $data;
+	}
 	
+	public function previewAvatar($mysqli, $fileIds) {
+		$data = array();
+		
+		$sql = "SELECT category.name as categoryName, layer.name as layerName, file.id as fileId, ";
+		$sql .= "CONCAT(category.name,'_',category.id,'/',filename) AS fileName, file.ownerId ";
+		$sql .= "FROM file ";
+		$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
+		$sql .= "LEFT JOIN category ON (category.id = layer.categoryId) ";
+		$sql .= sprintf("WHERE file.id IN (%s) ", implode(",", $fileIds));
+		$sql .= "ORDER BY layer.position ";
+
+		if ($result = $mysqli->query($sql)) {
+			while ($row = $result->fetch_assoc()) {
+				array_push($data, $row);
+			}
+		} else {
+			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+		}
+		
+		// create backgound
+		$avatar = imagecreatetruecolor(256, 256) or die("GD image create failed");
+		$white   = imagecolorallocate($avatar, 255, 255, 255);
+		imagefill($avatar,0,0,$white);
+
+		// add parts
+		$category = "";
+		$parts = array();
+		foreach($data as $index => $row){
+			$category = trim($row["categoryName"]);
+			$filename = trim($row["fileName"]);
+			$layer = trim($row["layerName"]);
+			$id =  intval($row["fileId"]);
+			$parts[$layer] = $id;
+			$file = dirname(__FILE__).'/../../images/presets/'.$filename;
+
+			$im = imagecreatefrompng($file);
+			if(!$im) die('Failed to load '.$file);
+			imageSaveAlpha($im, true);
+			imagecopy($avatar,$im,0,0,0,0,256,256);
+			imagedestroy($im);
+		}
+		
+		$assigned = false;
+		$tc  = imagecolorallocate($image, 255, 0, 0);
+		foreach($data as $index => $row){
+			$ownerId = intval($row["ownerId"]);
+			$text = sprintf("N/A %d", $ownerId);
+			
+			if (intval($row["ownerId"]) > 0) {
+				imagestring($image, 5, 5, 5, $text, $tc);
+				$assigned = true;
+				break;
+			}
+		}
+		
+		if (!$assigned) {
+			$sql = "SELECT id, userId, modified FROM user_booking WHERE fileId IN (%d);";		
+			$sql = sprintf($sql, implode(",", $fileIds));
+			if ($result = $mysqli->query($sql)) {
+				$ownerId = intval($row["userId"]);
+				$text = sprintf("N/A %d", $ownerId);
+				
+				if (intval($row["ownerId"]) > 0) {
+					imagestring($image, 5, 5, 5, $text, $tc);						
+					break;
+				}
+			} else {
+				throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+			}
+		}
+		
+		$source = $this->prepareBackground($avatar);
+		
+		$data = new \stdClass;
+		$data->category = $category;		
+		$data->parts = $parts;
+		$data->imageData = sprintf("data:image/png;base64,%s", base64_encode($source));
+
+		return $data;
+	}
 	
+	public function getAvatarImageSource($mysqli, $fileIds) {
+		$data = array();
+		
+		$sql = "SELECT category.name as categoryName, layer.name as layerName, file.id as fileId, ";
+		$sql .= "CONCAT(category.name,'_',category.id,'/',filename) AS fileName, file.ownerId ";
+		$sql .= "FROM file ";
+		$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
+		$sql .= "LEFT JOIN category ON (category.id = layer.categoryId) ";
+		$sql .= sprintf("WHERE file.id IN (%s) ", implode(",", $fileIds));
+		$sql .= "ORDER BY layer.position ";
+
+		if ($result = $mysqli->query($sql)) {
+			while ($row = $result->fetch_assoc()) {
+				array_push($data, $row);
+			}
+		} else {
+			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+		}
+		
+		// create backgound
+		$avatar = imagecreatetruecolor(256, 256) or die("GD image create failed");
+		$white   = imagecolorallocate($avatar, 255, 255, 255);
+		imagefill($avatar,0,0,$white);
+
+		foreach($data as $index => $row){
+			$filename = trim($row["fileName"]);
+			$file = dirname(__FILE__).'/../../images/presets/'.$filename;
+
+			$im = imagecreatefrompng($file);
+			if(!$im) die('Failed to load '.$file);
+			imageSaveAlpha($im, true);
+			imagecopy($avatar,$im,0,0,0,0,256,256);
+			imagedestroy($im);
+		}
+		
+		$source = $this->prepareBackground($avatar);
+
+		return $source;
+	}	
 }
 
 	

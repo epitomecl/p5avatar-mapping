@@ -2,7 +2,6 @@
 
 namespace modules;
 
-use admin\UserManagement as UserManagement;
 use \JsonSerializable as JsonSerializable;
 
 use PHPMailer\PHPMailer\PHPMailer;
@@ -13,7 +12,7 @@ require_once __DIR__.'/../common/PHPMailer/src/PHPMailer.php';
 require_once __DIR__.'/../common/PHPMailer/src/SMTP.php';
 
 /**
-* The input data (given name, email, confirmation of data protection and terms of service) are stored into database. 
+* The input data (given email, confirmation of data protection and terms of service) are stored into database. 
 * To given eMail address an random link will be send. If eMail has wrong spelling, success will be false. 
 * The user has to check also spam folder. Inside the email is a link with access code. 
 * The link is 15 min valid. After 15 min old invalid users will be delete. After confirming the link an apikey is available.
@@ -36,6 +35,77 @@ class ApiKey implements JsonSerializable{
 		$this->smtpConfig = $smtpConfig;
 	}
 	
+	private function isValidEmail($email) {
+		return filter_var($email, FILTER_VALIDATE_EMAIL) 
+			&& preg_match('/@.+\./', $email);
+	}
+	
+	private function getRemaining($mysqli, $token) {
+		$sql = "SELECT token, DATEDIFF(modified, NOW()) AS remaining ";
+		$sql .= "FROM user WHERE token='%s';";
+		$sql = sprintf($sql, $token);
+
+		$remaining = 0;
+		$value = "";
+		if ($result = $mysqli->query($sql)) {
+			while ($row = $result->fetch_assoc()) {
+				$remaining = intval($row["remaining"]);
+				$value = trim($row["token"]);
+				break;
+			}
+			
+			$result->free();
+		} else {
+			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+		}
+
+		if (strcmp($value, $token) != 0 || empty($value)) {
+			throw new Exception(sprintf("%s, %s", get_class($this), 'Unauthorized'), 401);
+		}
+			
+		return remaining;
+	}
+	
+	private function getUserId($mysqli, $email, $password) {
+		$userId = 0;
+		$sql = "SELECT userId, password, salt FROM profile ";
+		$sql .= "LEFT JOIN user ON (user.id = profile.userId) ";
+		$sql .= "WHERE email='%s'";
+		$sql = sprintf($sql, $email);
+
+		if ($result = $mysqli->query($sql)) {
+			while ($row = $result->fetch_assoc()) {
+				$sha256 = trim($row["password"]);
+				$salt = trim($row["salt"]);
+				
+				if (strcmp(hash_hmac("sha256", $sha256, $salt), $password) == 0) {
+					$userId = intval($row["userId"]);					
+				}
+			}
+			$result->free();
+		} else {
+			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+		}
+
+		return $userId;
+	}
+
+	private function hasApikey($mysqli, $userId) {
+		$id = 0;
+		$sql = "SELECT id FROM apikey WHERE userId='%s'";
+		$sql = sprintf($sql, $userId);
+		if ($result = $mysqli->query($sql)) {
+			while ($row = $result->fetch_assoc()) {
+				$id = intval($row["id"]);					
+			}
+			$result->free();
+		} else {
+			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+		}
+		
+		return ($id > 0);
+	}		
+		
 	/**
 	* something describes this method
 	*
@@ -46,168 +116,100 @@ class ApiKey implements JsonSerializable{
 	* @param int $termsOfService Terms of Service [1 : accepted, 0 : not accepted]
 	*/	
 	public function doPost($email, $password, $password2, $dataProtection, $termsOfService) {
-		/*
-		$sql = "SELECT user_name, email, phone, ";
-		$sql .= "DATEDIFF(expired, NOW()) as remaining ";
-		$sql .= "FROM users a ";
-		$sql .= "WHERE a.user_name ='%s' ";
-		$sql .= "AND a.email ='%s' ";
-		$sql .= "AND a.phone ='%s' ";
-		$sql = sprintf($sql, $this->userName, $this->email, $this->phone);
+		$email = strip_tags(stripcslashes(trim($email)));
+		$password = strip_tags(stripcslashes(trim($password)));
 
-		if ($result = $mysqli->query($sql)) {
-			if ($result->num_rows > 0) {
-				while ($row = $result->fetch_assoc()) {
-					$this->salt = $row["salt"];
-
-					if (strcmp($this->email, $row["email"]) != 0) {
-						$this->errorCode = 48;
-					} elseif (strcmp($this->phone, $row["phone"]) != 0) {
-						$this->errorCode = 128;
-					} elseif (intval($row["remaining"]) < 0) {
-						$this->errorCode = 255;
-					}
+		if (strcmp($password, $password2) == 0 && strlen($password) >= 8 && strlen($email) > 0 && isValidEmail($email)) {
+			$userId = $this->getUserId($mysqli, $email, $password);	
+			$modified = time() + (15 * 60);	
+			$sha256 = hash_hmac("sha256", get_class($this), $modified);
+			
+			if ($userId == 0) {
+				$salt = md5(sprintf("%s%s", get_class($this), time()));
+				$sha256 = hash_hmac("sha256", $password, $salt);
+				$sql = "INSERT INTO user SET password='%s', salt='%s%', token='%s', modified=FROM_UNIXTIME(%d), dataProtection=%d, termsOfService=%d;";
+				$sql = sprintf($sql, $sha256, $salt, $sha256, $modified, $dataProtection, $termsOfService);
+				if ($mysqli->query($sql) === false) {
+					throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
 				}
-				$result->free();
-			} else {
-				$this->errorCode = 64;
-			}
-		} else {
-			$this->errorCode = 1;
-		}
-		*/
-		
-		$token = $this->getTokenAndUpdateUser($this->mysqli, $email, time());
-	
-		$this->sendEmail($email, $token);
 
+				$sql = "INSERT INTO profile SET userId=%d, email='', modified=NOW();";
+				$sql = sprintf($sql, $mysqli->insert_id, $email);
+				if ($mysqli->query($sql) === false) {
+					throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+				}
+			} else {
+				$sql = "UPDATE user set modified=FROM_UNIXTIME(%d), token='%s' WHERE id='%d'";
+				$sql = sprintf($sql, $modified, $sha256);
+				if ($mysqli->query($sql) === false) {
+					throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+				}				
+			}
+			
+			$this->sendEmail($email, $sha256);
+		} else {
+			throw new Exception(sprintf("%s, %s", get_class($this), 'Not Acceptable'), 406);
+		}
 		
 		echo json_encode($this, JSON_UNESCAPED_UNICODE);
 	}
 	
 	/**
-	* something describes this method
+	* Update the apikey and set user as active user.
 	*
-	* @param string $token The request token		
+	* @param string $token The request token	
 	*/	
 	public function doGet($token) {
-		/*
-		$sql = "SELECT user_name, email, phone, ";
-		$sql .= "DATEDIFF(expired, NOW()) as remaining ";
-		$sql .= "FROM users a ";
-		$sql .= "WHERE a.user_name ='%s' ";
-		$sql .= "AND a.email ='%s' ";
-		$sql .= "AND a.phone ='%s' ";
-		$sql = sprintf($sql, $this->userName, $this->email, $this->phone);
-
-		if ($result = $mysqli->query($sql)) {
-			if ($result->num_rows > 0) {
-				while ($row = $result->fetch_assoc()) {
-					$this->salt = $row["salt"];
-
-					if (strcmp($this->email, $row["email"]) != 0) {
-						$this->errorCode = 48;
-					} elseif (strcmp($this->phone, $row["phone"]) != 0) {
-						$this->errorCode = 128;
-					} elseif (intval($row["remaining"]) < 0) {
-						$this->errorCode = 255;
-					}
-				}
-				$result->free();
-			} else {
-				$this->errorCode = 64;
-			}
-		} else {
-			$this->errorCode = 1;
-		}
-		*/
+		$mysqli = $this->mysqli;
 		
-		$obj = new \stdClass();
-		$obj->apikey = md5(sprintf("%s", time())); //$this->getTokenAndUpdateUser($mysqli);
+		$token = strip_tags(stripcslashes(trim($token)));
+		$remaining = $this->getRemaining($mysqli, $token);
+				
+		if ($remaining < 0) {
+			throw new Exception(sprintf("%s, %s", get_class($this), 'Request Time-out'), 408);
+		}
+		
+		$userId = 0;
+		$sql = "SELECT userId FROM user WHERE token='%s'";
+		$sql = sprintf($sql, $token);
+		if ($result = $mysqli->query($sql)) {
+			while ($row = $result->fetch_assoc()) {
+				$userId = intval($row["userId"]);					
+			}
+			$result->free();
+		} else {
+			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+		}
+		
+		if ($userId == 0) {
+			throw new Exception(sprintf("%s, %s", get_class($this), "Gone"), 410);
+		}
+		
+		$sql = "UPDATE user set token='', active=1 WHERE id='%s';";
+		$sql = sprintf($sql, $userId);
+		if ($mysqli->query($sql) === false) {
+			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+		}
+		
+		$modified = time() + (15 * 60);	
+		$sha256 = hash_hmac("sha256", get_class($this), $modified);
+		$sql = "INSERT INTO apikey SET apikey='%s', userId=%d, modified=NOW();";		
+		if ($this->hasApikey($mysqli, $userId)) {
+			$sql = "UPDATE apikey SET apikey='%s', modified=NOW() WHERE userId=%d;";
+		}
+		$sql = sprintf($sql, $apikey, $userId);
+		if ($mysqli->query($sql) === false) {
+			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+		}
+		
+		$obj = stdClass();
+		$obj->apikey = $sha256;
 		
 		echo json_encode($obj, JSON_UNESCAPED_UNICODE);
 	}
 	
-	function insertToken($mysqli, $token) {
-		$modified = time() + (15 * 60);
-		$data = array($userName, $maId, $email, $modified);
-		$token = getResetToken($data, $this->getClassName($this));
-
-		$sql = "UPDATE user ";
-		$sql .= "LEFT JOIN ma ON (ma.id = user.maID) ";
-		$sql .= "SET user.modified = FROM_UNIXTIME(%d), token = '%s' ";
-		$sql .= "WHERE ma.email = '%s' ";
-		$sql .= "AND ma.locked = 0 AND user.deleted != 'Ja'";
-		$sql = sprintf($sql, $modified, $token, $email);
-
-		if ($mysqli->query($sql) === true) {
-			
-		}
-	}
-	
-	function isValidEmail($email) {
-		if (empty($email) || is_array($email) || is_numeric($email) || is_bool($email) || is_float($email) || is_file($email) || is_dir($email) || is_int($email)) {
-			return 0;
-		} else {
-			$email=trim(strtolower($email));
-			if (filter_var($email, FILTER_VALIDATE_EMAIL) !== false) {
-				return 1;
-			} else {
-				$pattern = '/^(?!(?:(?:\\x22?\\x5C[\\x00-\\x7E]\\x22?)|(?:\\x22?[^\\x5C\\x22]\\x22?)){255,})(?!(?:(?:\\x22?\\x5C[\\x00-\\x7E]\\x22?)|(?:\\x22?[^\\x5C\\x22]\\x22?)){65,}@)(?:(?:[\\x21\\x23-\\x27\\x2A\\x2B\\x2D\\x2F-\\x39\\x3D\\x3F\\x5E-\\x7E]+)|(?:\\x22(?:[\\x01-\\x08\\x0B\\x0C\\x0E-\\x1F\\x21\\x23-\\x5B\\x5D-\\x7F]|(?:\\x5C[\\x00-\\x7F]))*\\x22))(?:\\.(?:(?:[\\x21\\x23-\\x27\\x2A\\x2B\\x2D\\x2F-\\x39\\x3D\\x3F\\x5E-\\x7E]+)|(?:\\x22(?:[\\x01-\\x08\\x0B\\x0C\\x0E-\\x1F\\x21\\x23-\\x5B\\x5D-\\x7F]|(?:\\x5C[\\x00-\\x7F]))*\\x22)))*@(?:(?:(?!.*[^.]{64,})(?:(?:(?:xn--)?[a-z0-9]+(?:-+[a-z0-9]+)*\\.){1,126}){1,}(?:(?:[a-z][a-z0-9]*)|(?:(?:xn--)[a-z0-9]+))(?:-+[a-z0-9]+)*)|(?:\\[(?:(?:IPv6:(?:(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){7})|(?:(?!(?:.*[a-f0-9][:\\]]){7,})(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){0,5})?::(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){0,5})?)))|(?:(?:IPv6:(?:(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){5}:)|(?:(?!(?:.*[a-f0-9]:){5,})(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){0,3})?::(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){0,3}:)?)))?(?:(?:25[0-5])|(?:2[0-4][0-9])|(?:1[0-9]{2})|(?:[1-9]?[0-9]))(?:\\.(?:(?:25[0-5])|(?:2[0-4][0-9])|(?:1[0-9]{2})|(?:[1-9]?[0-9]))){3}))\\]))$/iD';
-				return (preg_match($pattern, $email) === 1) ? 1 : 0;
-			}
-		}
-	}
-
-	function isValidUser($mysqli, $email) {
-		$maId = 0;
-		
-		$sql = "SELECT user.id, user.maID FROM user ";
-		$sql .= "WHERE user.email = '%s' ";
-		$sql = sprintf($sql, $email);
-
-		if ($result = $mysqli->query($sql)) {
-			if ($result->num_rows > 0) {
-				while ($row = $result->fetch_assoc()) {
-					$maId = intval($row["maID"]);
-					break;
-				}
-				$result->free();
-			}
-		}
-		
-		return $maId;
-	}
-
-	function getResetToken($array, $salt) {
-		$salt = str_pad($salt, 32);
-		$data = "";
-		
-		foreach($array as $value) {
-			$data .= base64_encode($value);
-		}
-		
-		return hash_hmac("sha256", $data, $salt);
-	}
-
-	public function getTokenAndUpdateUser($mysqli, $email, $phone) {
-		$modified = time() + (15 * 60);
-		$data = array($email, $phone, $modified);
-		$token = UserManagement::getResetToken($data, "agaadfda");//$this->salt);
-		
-		$sql = "UPDATE user set modified=FROM_UNIXTIME(%d), token='%s' ";
-		$sql .= "WHERE email='%s' ";
-		$sql = sprintf($sql, $modified, $token, $email);
-		
-		//if (!$mysqli->query($sql)) {
-		//	throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
-		//}
-
-		return $token;
-	}
-
-	public function sendEmail($email, $token) {
-		$config = $this->smtpConfig; //parse_ini_file($_SERVER["DOCUMENT_ROOT"] . "/api/include/mail.smtp.ini");
+	private function sendEmail($email, $token) {
+		$config = $this->smtpConfig;
 		
 		$to = $email;
 		$from = "marian@epitomecl.com";
@@ -281,7 +283,7 @@ class ApiKey implements JsonSerializable{
 		return $protocol.$domainName;
 	}
 	
-	function getClassName($obj) {
+	private function getClassName($obj) {
 		return substr(strrchr(get_class($obj), '\\'), 1);
 	}
 }
