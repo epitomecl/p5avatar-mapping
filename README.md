@@ -55,22 +55,24 @@ Call PUT request PAYMENT
 
 ## Call
 
-Without any param settings an api test suite comes up. Here you can check all methods on several ways.
+Without any param settings an api test suite comes up. Here you can check all methods on several ways. 
 
 https://api.avarkey.com/api/
 
 
 ## Current available modules
 
-|[x] ADDRESS	|[X] DESIGNER	|[x] PROFILE
-|[x] ALIAS		|[X] HASHTAG	|[x] USERROLE
-|[x] APIKEY		|[X] LAYER		|[x] SIGNUP
-|[x] AVATAR		|[x] LOGIN		|[x] TITLE
-|[X] BOOKING	|[x] LOGOUT		|[X] UPLOAD
-|[X] CATEGORY	|[x] PASSWORD	|
-|[x] CLOSE		|[X] PAYMENT	|
-|[X] CREATE		|[x] PREVIEW	|
-|[x] CURRENCY	|[X] PRICE		|[X] WHOISONLINE
+| A - C | D - P | P - W
+| ------------- | ------------- | ----------- |
+|[x] ADDRESS	|[X] DESIGNER	|[x] PROFILE |
+|[x] ALIAS		|[X] HASHTAG	|[x] USERROLE |
+|[x] APIKEY		|[X] LAYER		|[x] SIGNUP	|
+|[x] AVATAR		|[x] LOGIN		|[x] TITLE	|
+|[X] BOOKING	|[x] LOGOUT		|[X] UPLOAD	|
+|[X] CATEGORY	|[x] PASSWORD	|	|
+|[x] CLOSE		|[X] PAYMENT	|	|
+|[X] CREATE		|[x] PREVIEW	|	|
+|[x] CURRENCY	|[X] PRICE		|[X] WHOISONLINE |
 		
 
 ## ADDRESS
