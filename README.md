@@ -59,20 +59,20 @@ Without any param settings an api test suite comes up. Here you can check all me
 
 https://api.avarkey.com/api/
 
-
+[Go to Real Cool Heading section](#real-cool-heading)
 ## Current available modules
 
 | A - C | D - P | P - W
 | ------------- | ------------- | ----------- |
-|[x] ADDRESS	|[x] DESIGNER	|[x] PROFILE |
-|[x] ALIAS		|[x] HASHTAG	|[x] USERROLE |
-|[x] APIKEY		|[x] LAYER		|[x] SIGNUP	|
-|[x] AVATAR		|[x] LOGIN		|[x] TITLE	|
-|[x] BOOKING	|[x] LOGOUT		|[x] UPLOAD	|
+|[x] [ADDRESS](#address)	|[x] DESIGNER	|[x] [PROFILE](#profile) |
+|[x] ALIAS		|[x] HASHTAG	|[x] [USERROLE](#userrole) |
+|[x] APIKEY		|[x] LAYER		|[x] [SIGNUP](#signup)	|
+|[x] AVATAR		|[x] LOGIN		|[x] [TITLE](#title)	|
+|[x] BOOKING	|[x] LOGOUT		|[x] [UPLOAD](#upload)	|
 |[x] CATEGORY	|[x] PASSWORD	|	|
 |[x] CLOSE		|[x] PAYMENT	|	|
 |[x] CREATE		|[x] PREVIEW	|	|
-|[x] CURRENCY	|[x] PRICE		|[x] WHOISONLINE |
+|[x] CURRENCY	|[x] PRICE		|[x] [WHOISONLINE](#whoisonline) |
 		
 
 ## ADDRESS
@@ -120,7 +120,7 @@ POST Output:
 The input data (given email, confirmation of data protection and terms of service) are stored into database. 
 To given eMail address an random link will be send. If eMail has wrong spelling, success will be false. 
 The user has to check also spam folder. Inside the email is a link with access code. 
-The link is 15 min valid. After 15 min old invalid users will be delete. After confirming the link an apikey is available.
+The link is 15 min valid. After 15 min old invalid users will be ready for deleting. After confirming the link an apikey is available.
 
 POST Input: 
 ```
