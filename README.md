@@ -103,7 +103,7 @@ GET Output:
 {"success":true}
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## ALIAS
 
@@ -120,7 +120,7 @@ POST Output:
 {"success":true}
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## APIKEY
 
@@ -149,7 +149,7 @@ GET Output:
 {"apikey":"46eb20c6feae6216dd5763e7956dcdf4e98c98883f198d01a4112541cd622670"}
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## AVATAR
 
@@ -176,7 +176,7 @@ GET Output:
 �PNG  IHDR�?1	pHYs���+�IDATx����N�0@�e���r�PE�k2 ...
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## BOOKING
 
@@ -197,7 +197,7 @@ POST Output:
 {"success":true}
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## CANVAS
 
@@ -214,7 +214,7 @@ POST Output:
 {"success":true}
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## CLOSE
 
@@ -232,7 +232,7 @@ POST Output:
 {"success":true}
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## CREATE 
 
@@ -251,7 +251,7 @@ POST Output:
 {"userId":"2","canvas":"Yellowed_Gharial","canvasId":13,"layer":[{"layerId":25,"layerName":"background","position":1},{"layerId":26,"layerName":"body","position":2},{"layerId":27,"layerName":"fur","position":3},{"layerId":28,"layerName":"eyes","position":4},{"layerId":29,"layerName":"mouth","position":5},{"layerId":30,"layerName":"accessorie","position":6}]}
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## CURRENCY
 
@@ -281,7 +281,7 @@ GET Output:
 [{"release":2009,"currency":"Bitcoin","symbol":["BTC","XBT","₿"],"supported":false,"notes":"The first and most widely used decentralized ledger currency, with the highest market capitalization."},...]
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## HASHTAG
 
@@ -308,7 +308,7 @@ GET Output:
 {"hashtags":["beauty","active","cute",""]}
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## IMAGE
 
@@ -335,7 +335,7 @@ GET Output:
 �PNG  IHDR�?1...
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## Layer
 
@@ -374,7 +374,7 @@ GET Output:
 {"id":"1","name":"accessorie","fileIds":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]}
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## LOGIN
 
@@ -392,7 +392,7 @@ POST Output:
 {"userId":1}
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## LOGOUT
 
@@ -408,7 +408,7 @@ POST Output:
 {"success":true}
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## PASSWORD
 
@@ -447,7 +447,7 @@ GET Output:
 {"success":true}
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## PAYMENT 
 
@@ -501,7 +501,7 @@ DEL Output:
 {"success":true}
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## PREVIEW
 
@@ -521,7 +521,7 @@ Output:
 {"address":"1Fvxg6UX11zDLdcaQdWakbbvpv375CFoJq","sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","canvas":"cat","parts":{"background":1,"body":11,"fur":5,"eyes":8,"mouth":3,"accessorie":6},"imageData":"data:image\/png;base64,iVB..."}
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## PRICE
 
@@ -547,7 +547,7 @@ GET Output:
 {"fee":"0.000000000000000000","currency":"EOS"}
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## PROFILE
 
@@ -577,7 +577,7 @@ GET Output:
 {"firstName":"Marian","lastName":"Kulisch","alias":"Schlaraffenland","email":"s681562@gmail.com","imageData":"data:image\/png;base64,iVBORw0KGgoAAAAN.."}
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## SIGNUP
 To given eMail address an random link will be send. If eMail has wrong spelling, success will be false. 
@@ -604,7 +604,7 @@ GET Output:
 {"success":true}
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## TITLE 
 
@@ -621,7 +621,7 @@ POST Output:
 ["Brave Octopus","Confused Crane","Selfish Antelope","Wide-eyed Peacock","Weary Kookaburra","Confused Bison","Xenophobic Llama","Yellowed Koala","Confused Gentoo","Xenophobic Yak"]
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## UPLOAD
 
@@ -641,7 +641,7 @@ POST Output:
 [{"divId":1, "fileId":222, "fileName":"93B31277490D8E2C1E85D77EF4B516E7.png", "original":"fur03.png" : "assigned":true}]
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## USERROLE
 
@@ -671,7 +671,7 @@ GET Output:
 [{"id":1,"name":"USER"},{"id":2,"name":"DESIGNER"},{"id":4,"name":"DEVELOPER"}]
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
 
 ## WHOISONLINE
 
@@ -688,4 +688,4 @@ POST Output:
 {"counter":15770,"ip":"61.98.24.84"}
 ```
 
-<div style="text-align: right"><a href="#current-available-modules">Top</a></div>
+<p align="right"><a href="#current-available-modules">Top</a></p>
