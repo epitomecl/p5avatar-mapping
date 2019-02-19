@@ -50,12 +50,12 @@ class UserRole {
 		$sql .= "LEFT JOIN role ON (user_role.roleId = role.id) ";
 		$sql .= "WHERE user_role.userId=%d";
 		$sql = sprintf($sql, intval($userId));
-		
+
 		if ($result = $mysqli->query($sql)) {
 			while ($row = $result->fetch_assoc()) {
 				$obj = new \stdClass();
 				$obj->id = intval($row["id"]);
-				$obj->name = intval($row["name"]);
+				$obj->name = trim($row["name"]);
 				array_push($data, $obj);
 			}
 			

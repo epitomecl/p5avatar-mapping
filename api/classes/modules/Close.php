@@ -46,7 +46,7 @@ class Close  implements JsonSerializable {
 			unlink($path.$fileName);
 		}
 		
-		$folders = getCategoryNames($mysqli, $userId);
+		$folders = getCanvasNames($mysqli, $userId);
 		foreach ($folders as $index => $folder) {
 			if (file_exists($path.$folder)) {
 				array_map('unlink', glob($path.$folder."*.*"));
@@ -60,7 +60,7 @@ class Close  implements JsonSerializable {
 			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
 		}
 		
-		$sql = "DELETE FROM user_category WHERE userId = %d";
+		$sql = "DELETE FROM user_canvas WHERE userId = %d";
 		$sql = sprintf($sql, intval($userId));
 		if ($mysqli->query($sql) === false) {
 			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
@@ -89,16 +89,16 @@ class Close  implements JsonSerializable {
 		echo json_encode($this, JSON_UNESCAPED_UNICODE);		
 	}
 	
-	private function getCategoryNames($mysqli, $userId) {
+	private function getCanvasNames($mysqli, $userId) {
 		$folders = array();
-		$sql = "SELECT CONCAT(category.name,'_',category.id,'/') AS categoryName FROM category ";
-		$sql .= "LEFT JOIN user_category ON (user_category.categoryId = category.id) ";
-		$sql .= "WHERE user_category.userId=%d";		
+		$sql = "SELECT CONCAT(canvas.name,'_',canvas.id,'/') AS canvasName FROM canvas ";
+		$sql .= "LEFT JOIN user_canvas ON (user_canvas.canvasId = canvas.id) ";
+		$sql .= "WHERE user_canvas.userId=%d";		
 		$sql = sprintf($sql, $userId);
 
 		if ($result = $mysqli->query($sql)) {
 			while ($row = $result->fetch_assoc()) {
-				array_push($folders, trim($row["categoryName"]));
+				array_push($folders, trim($row["canvasName"]));
 			}
 			$result->free();
 		} else {

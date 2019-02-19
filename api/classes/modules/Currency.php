@@ -2,19 +2,50 @@
 
 namespace modules;
 
+use \JsonSerializable as JsonSerializable;
+use \Exception as Exception;
+
 /**
 * If user session is alive, a list currency will be responded.
 * All currency properties hold an "supported" attribute.
 * Intern shortname (3 chars) of crypto currency will be used. 
+* POST update current currency of canvas.
+* GET prepared information set about all useful crypto currencies (wikipedia).
 */
-class Currency {
+class Currency implements JsonSerializable{
+	private $mysqli;
 	private $url;
+	
+	public function jsonSerialize() {
+		return array(
+			'success' => true
+        );
+    }
 	
 	public function __construct() {
 		$this->url = 'https://en.wikipedia.org/wiki/List_of_cryptocurrencies';
 	}
-
-	public function doPost() {
+		
+	/**
+	* something describes this method
+	*
+	* @param int $canvasId The id of canvas	
+	* @param string $currency The currency as shortcut
+	*/		
+	public function doPost($canvasId, $currency) {
+		$mysqli = $this->mysqli;
+		
+		$sql = "UPDATE canvas SET currency='%s' WHERE id=%d";
+		$sql = sprintf($sql, $price, $currency, $fileId);
+		if ($mysqli->query($sql) === false) {
+			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+		}
+		if ($mysqli->affected_rows == 0 || $fileId == 0) {
+			throw new Exception(sprintf("%s, %s", get_class($this), 'Not Found'), 404);
+		}		
+	}
+	
+	public function doGet() {
 		echo json_encode($this->getList($this->url), JSON_UNESCAPED_UNICODE);
 	}
 	

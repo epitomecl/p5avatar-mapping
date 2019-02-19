@@ -6,10 +6,10 @@ use \JsonSerializable as JsonSerializable;
 use \Exception as Exception;
 
 /**
-* If user session is alive, user can update current category (called as name of avatar). 
+* If user session is alive, user can update current canvas (called as name of avatar). 
 * Hashtags (comma separated) are describing the attributes for searching.
 **/
-class Category implements JsonSerializable{
+class Canvas implements JsonSerializable{
 	private $mysqli;
 	
 	public function jsonSerialize() {
@@ -25,22 +25,26 @@ class Category implements JsonSerializable{
 	/**
 	* something describes this method
 	*
-	* @param int $categoryId The id of category
+	* @param int $canvasId The id of canvas
 	* @param string $name The name
 	* @param string $hashtag The hashtag as comma separated list
 	*/	
-	public function doPost($categoryId, $name, $hashtag) {
+	public function doPost($canvasId, $name, $hashtag) {
 		$mysqli = $this->mysqli;
-		$path = dirname(__FILE__).'/../../images/presets/';		
+		$path = realpath(dirname(__FILE__).'/../../images/presets')."/";		
 		$name = strip_tags(stripcslashes(trim($name)));
 		$hashtag = strip_tags(stripcslashes(trim($hashtag)));
-		$categoryName = getCategoryName($mysqli, $categoryId);
-
-		// rename old category path into new category path
-		if (strlen($categoryName) > 0 && !file_exists($path.$categoryName)) {
-			if (rename($path.$categoryName, $path.$name)) {
-				$sql = "UPDATE category SET name='%s' WHERE id=%d";
-				$sql = sprintf($sql, $name, $categoryId);
+		$canvasName = getCanvasName($mysqli, $canvasId);
+		
+		if (empty($name)) {
+			throw new Exception(sprintf("%s, %s", get_class($this), 'Precondition Failed'), 412);
+		}
+		
+		// rename old canvas path into new canvas path
+		if (strlen($canvasName) > 0 && file_exists($path.$canvasName)) {
+			if (rename($path.$canvasName, $path.$name)) {
+				$sql = "UPDATE canvas SET name='%s' WHERE id=%d";
+				$sql = sprintf($sql, $name, $canvasId);
 				if ($mysqli->query($sql) === false) {
 					throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
 				}
@@ -48,8 +52,8 @@ class Category implements JsonSerializable{
 		}
 		
 		// delete old hashtags
-		$sql = "DELETE FROM hashtag WHERE categoryId=%d";
-		$sql = sprintf($sql, $categoryId);
+		$sql = "DELETE FROM hashtag WHERE canvasId=%d";
+		$sql = sprintf($sql, $canvasId);
 		if ($mysqli->query($sql) === false) {
 				throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
 		}
@@ -57,8 +61,8 @@ class Category implements JsonSerializable{
 		// insert new hashtags
 		$tokens = explode(",", trim($hashtag));		
 		foreach ($tokens as $item) {
-			$sql = "INSERT INTO hashtag SET categoryId=%d, hashtag='%s'";
-			$sql = sprintf($sql, $categoryId, $mysqli->real_escape_string($item));
+			$sql = "INSERT INTO hashtag SET canvasId=%d, hashtag='%s'";
+			$sql = sprintf($sql, $canvasId, $mysqli->real_escape_string($item));
 			if ($mysqli->query($sql) === false) {
 				throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
 			}			
@@ -67,20 +71,20 @@ class Category implements JsonSerializable{
 		echo json_encode($this, JSON_UNESCAPED_UNICODE);
 	}
 	
-	private function getCategoryName($mysqli, $categoryId) {
+	private function getCanvasName($mysqli, $canvasId) {
 		$value = "";
-		$sql = "SELECT CONCAT(category.name,'_',category.id,'/') AS categoryName WHERE id=%d";
-		$sql = sprintf($sql, $categoryId);
+		$sql = "SELECT CONCAT(canvas.name,'_',canvas.id,'/') AS canvasName WHERE id=%d";
+		$sql = sprintf($sql, $canvasId);
 
 		if ($result = $mysqli->query($sql)) {
 			while ($row = $result->fetch_assoc()) {
-				$value = trim($row["categoryName"]);
+				$value = trim($row["canvasName"]);
 			}
 			$result->free();
 		} else {
 			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
 		}
 
-		return $value;
+		return str_replace(" ", "_", $value);
 	}	
 }

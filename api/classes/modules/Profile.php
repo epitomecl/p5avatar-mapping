@@ -164,6 +164,7 @@ class Profile  implements JsonSerializable{
 		imagepng($image);
 		$data = ob_get_contents();
 		ob_end_clean(); 		
+		imagedestroy($image);
 		
 		return sprintf("data:image/png;base64,%s", base64_encode($data));
 	}
@@ -182,7 +183,7 @@ class Profile  implements JsonSerializable{
 	public function doPost($userId, $firstName, $lastName, $alias, $email, $file, $imageData) {
 		$mysqli = $this->mysqli;
 		$profileId = 0;
-		$path = dirname(__FILE__).'/../../images/profiles/';		
+		$path = realpath(dirname(__FILE__).'/../../images/profile')."/";		
 		
 		// in case of changing firstname and lastname deleting old photo
 		$fileName = "";
@@ -230,7 +231,7 @@ class Profile  implements JsonSerializable{
 	public function doGet($userId) {
 		$mysqli = $this->mysqli;
 		$profileId = 0;
-		$path = dirname(__FILE__).'/../../images/profiles/';		
+		$path = realpath(dirname(__FILE__).'/../../images/profile')."/";		
 		$firstName = "";
 		$lastName = ""; 
 		$alias = ""; 

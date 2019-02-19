@@ -27,14 +27,14 @@ class HashTag implements JsonSerializable{
 	/**
 	* something describes this method
 	*
-	* @param int $categoryId The id of category
+	* @param int $canvasId The id of canvas
 	*/	
-	public function doPost($categoryId) {
+	public function doPost($canvasId) {
 		$mysqli = $this->mysqli;
 		
 		$data = array();
-		$sql = "SELECT DISTINCT hashtag FROM hashtag WHERE categoryId=%d";
-		$sql = sprintf($sql, $categoryId);
+		$sql = "SELECT DISTINCT hashtag FROM hashtag WHERE canvasId=%d";
+		$sql = sprintf($sql, $canvasId);
 		
 		if ($result = $mysqli->query($sql)) {
 			while ($row = $result->fetch_assoc()) {

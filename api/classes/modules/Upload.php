@@ -4,6 +4,10 @@ namespace modules;
 
 /**
 * If user session is alive, files will be uploaded and transformed into png. 
+* User can upload multiple files. File is the browser file object. 
+* LayerId directed to the layer name for combination of layer name and current number of layers as file name.
+* DivId is the wrapping divider for the image in html template. Unlink is the file id for deleting unused file.
+* If file is unlinked, it is not longer assigned.
 */
 class Upload {
 	private $mysqli;
@@ -46,16 +50,16 @@ class Upload {
 		return $files;
 	}
 	
-	private function getCategoryName($mysqli, $layerId) {
+	private function getCanvasName($mysqli, $layerId) {
 		$value = "";
-		$sql = "SELECT CONCAT(category.name,'_',category.id,'/') AS categoryName, layer.layerId FROM layer ";
-		$sql .= "LEFT JOIN category ON (category.id = layer.categoryId) ";
+		$sql = "SELECT CONCAT(canvas.name,'_',canvas.id,'/') AS canvasName, layer.layerId FROM layer ";
+		$sql .= "LEFT JOIN canvas ON (canvas.id = layer.canvasId) ";
 		$sql .= "WHERE layerId=%d";
 		$sql = sprintf($sql, $layerId);
 
 		if ($result = $mysqli->query($sql)) {
 			while ($row = $result->fetch_assoc()) {
-				$value = trim($row["categoryName"]);
+				$value = trim($row["canvasName"]);
 			}
 			$result->free();
 		} else {
@@ -76,26 +80,26 @@ class Upload {
 	public function doPost($file, $layerId, $divId, $unlink) {
 		$mysqli = $this->mysqli;
 		$uploads = $this->reArrayFiles($file);
-		$path = dirname(__FILE__).'/../../images/presets/';
+		$path = realpath(dirname(__FILE__).'/../../images/presets')."/";
 		$files = array();	
 		
 		// remove unlinked files
 		foreach ($unlink as $id) {
 			$fileId = intval($id);
-			$sql = "SELECT CONCAT(category.name,'_',category.id,'/') AS categoryName, file.original, file.filename ";
+			$sql = "SELECT CONCAT(canvas.name,'_',canvas.id,'/') AS canvasName, file.original, file.filename ";
 			$sql .= "FROM file ";
 			$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
-			$sql .= "LEFT JOIN category ON (category.id = layer.categoryId) ";
+			$sql .= "LEFT JOIN canvas ON (canvas.id = layer.canvasId) ";
 			$sql .= sprintf("WHERE file.id = %d", $fileId);
 			$sql .= "ORDER BY layer.position ";
 			$result = $mysqli->query($sql);
 			while ($row = $result->fetch_array()){
-				$categoryName = $row["categoryName"];
+				$canvasName = $row["canvasName"];
 				$fileName = $row["filename"];
 				$original = $row["original"];
 				
-				if (file_exists($path.$categoryName.$fileName)) {
-					unlink($path.$categoryName.$fileName);
+				if (file_exists($path.$canvasName.$fileName)) {
+					unlink($path.$canvasName.$fileName);
 				}
 				if (!file_exists($path.$fileName)) {
 					$sql = sprintf("DELETE FROM file WHERE id=%d", $fileId);
@@ -112,14 +116,14 @@ class Upload {
 			}
 		}
 
-		$categoryName = $this->getCategoryName($mysqli, $layerId);
+		$canvasName = $this->getCanvasName($mysqli, $layerId);
 		
-		if (strlen($categoryName) == 0) {
+		if (strlen($canvasName) == 0) {
 			throw new Exception(sprintf("%s, %s", get_class($this), 'Precondition Failed'), 412);
 		}
 		
-		if (!file_exists($path.$categoryName)) {
-			mkdir($path.$categoryName, 0777, true);
+		if (!file_exists($path.$canvasName)) {
+			mkdir($path.$canvasName, 0777, true);
 		}
 		
 		// move uploaded files
@@ -130,7 +134,7 @@ class Upload {
 				$tmp = explode('.', $original);
 				$extension = strtolower(end($tmp));
 				$fileName = sprintf("%s.%s", md5($original.time()), $extension);
-				$moved = move_uploaded_file($tmp_name, $path.$categoryName.$fileName);
+				$moved = move_uploaded_file($tmp_name, $path.$canvasName.$fileName);
 
 				if( $moved ) {
 					$obj = new stdclass;

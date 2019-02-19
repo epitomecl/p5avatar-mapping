@@ -68,10 +68,12 @@ class Payment {
 		}
 		
 		$data = array();
-		$sql = "SELECT id, fileId, price, currency FROM user_booking ";
-		$sql .= "LEFT JOIN price ON (price.fileId = user_booking.fileId) ";
-		$sql .= "WHERE fileId IN (%d);";
-		$sql .= "AND file.userId=%d;";
+		$sql = "SELECT id, fileId, fee, currency FROM user_booking ";
+		$sql .= "LEFT JOIN file ON (file.id = user_booking.fileId) ";
+		$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
+		$sql .= "LEFT JOIN canvas ON (canvas.id = layer.canvasId) ";
+		$sql .= "WHERE user_booking.fileId IN (%d);";
+		$sql .= "AND user_booking.userId=%d;";
 		sprintf($sql, implode(",", $ids), $userId);
 		if ($result = $mysqli->query($sql)) {
 			if ($row = $result->fetch_assoc()) {
@@ -129,7 +131,7 @@ class Payment {
 
 		$builder = new AvatarBuilder();
 		$image = $builder->getAvatarImageSource($mysqli, $fileIds);
-		$path = dirname(__FILE__).'/../../images/avatars/';
+		$path = realpath(dirname(__FILE__).'/../../images/avatars')."/";
 		$fileName = sprintf("%s.%s", md5($userId.time()), "png");
 
 		if (!file_exists($path)) {
@@ -213,9 +215,9 @@ class Payment {
 		
 		$data = array();
 		$sql = "SELECT id, userId, filename, orginal, ";
-		$sql .= "CONCAT(category.name,'_',category.id,'/') AS categoryName FROM file ";
+		$sql .= "CONCAT(canvas.name,'_',canvas.id,'/') AS canvasName FROM file ";
 		$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";		
-		$sql .= "LEFT JOIN category ON (category.id = layer.categoryId) ";
+		$sql .= "LEFT JOIN canvas ON (canvas.id = layer.canvasId) ";
 		$sql .= "WHERE ownerId=%d AND file.id IN (%d);";		
 		$sql = sprintf($sql, $userId, implode(",", $ids));
 		if ($result = $mysqli->query($sql)) {
@@ -229,13 +231,14 @@ class Payment {
 		$status = array();
 		foreach ($ids as $index => $fileId) {
 			$obj = new \stdClass();
-			$obj->id = $fileId;
+			$obj->fileId = $fileId;
 			$obj->ownerId = 0;
 			$obj->pending = 1;
 			if (array_key_exists($fileId, $data)) {
 				$obj->ownerId = intval($data["onwerId"]);
 				$obj->pending = 0;
 			}
+			array_push($status, $obj);
 		}
 		
 		echo json_encode($status, JSON_UNESCAPED_UNICODE);		

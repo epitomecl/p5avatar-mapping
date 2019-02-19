@@ -162,12 +162,14 @@ class AvatarBuilder {
 			$sql = "SELECT id, userId, modified FROM user_booking WHERE fileId IN (%d);";		
 			$sql = sprintf($sql, implode(",", $fileIds));
 			if ($result = $mysqli->query($sql)) {
-				$ownerId = intval($row["userId"]);
-				$text = sprintf("N/A %d", $ownerId);
+				while ($row = $result->fetch_assoc()) {
+					$ownerId = intval($row["userId"]);
+					$text = sprintf("N/A %d", $ownerId);
 				
-				if (intval($row["ownerId"]) > 0) {
-					imagestring($image, 5, 5, 5, $text, $tc);						
-					break;
+					if (intval($row["ownerId"]) > 0) {
+						imagestring($image, 5, 5, 5, $text, $tc);						
+						break;
+					}
 				}
 			} else {
 				throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);

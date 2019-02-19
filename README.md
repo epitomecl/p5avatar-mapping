@@ -2,18 +2,21 @@
 
 Web interface for user interaction between homepage and backend.
 
+<p align="justify">
 The layered generation tool provides interface between webapp and centralized/distributed data and avatar handling. 
 The user can act in different roles. Admin is responsible for management, user is searching for avatars, designer 
 creating avatars, supervisor monitoring compliance with the rules of creating avatars.
-
+</p>
+<p align="justify">
 Guest are able to play with default avatar. They can enter their wallet address for request an suitable avatar (cat). 
 If this avatar is used by user after internal check, than “used” marker can be show up.
-
 User are able to choose from avatar selection ordered by designer or avatar. If user selected one avatar, 
 this avatar is locked. Request for such kind of locked avatars leads into positive used response.
-
+</p>
+<p align="justify">
 At the moment using an api key is not necessary. 
 Therefore requesting for apikey is more for implement your own ideas based on this api.
+</p>
 
 ### Steps for creating an account:
 
@@ -22,7 +25,7 @@ Call POST request SIGNUP
 Call GET request SIGNUP
 ```
 
-### Steps for create an basic workplace with one category and 6 layers
+### Steps for create an basic workplace with one canvas and 6 layers
 
 ```
 Call POST request LOGIN
@@ -59,20 +62,20 @@ Without any param settings an api test suite comes up. Here you can check all me
 
 https://api.avarkey.com/api/
 
-[Go to Real Cool Heading section](#real-cool-heading)
+
 ## Current available modules
 
-| A - C | D - P | P - W
-| ------------- | ------------- | ----------- |
-|[x] [ADDRESS](#address)	|[x] DESIGNER	|[x] [PROFILE](#profile) |
-|[x] ALIAS		|[x] HASHTAG	|[x] [USERROLE](#userrole) |
-|[x] APIKEY		|[x] LAYER		|[x] [SIGNUP](#signup)	|
-|[x] AVATAR		|[x] LOGIN		|[x] [TITLE](#title)	|
-|[x] BOOKING	|[x] LOGOUT		|[x] [UPLOAD](#upload)	|
-|[x] CATEGORY	|[x] PASSWORD	|	|
-|[x] CLOSE		|[x] PAYMENT	|	|
-|[x] CREATE		|[x] PREVIEW	|	|
-|[x] CURRENCY	|[x] PRICE		|[x] [WHOISONLINE](#whoisonline) |
+| A - C 					| H - P 					| P - W								|
+| ------------------------- | ------------------------- | --------------------------------- |
+|:star: [ADDRESS](#address)	|:star: [HASHTAG](#hashtag)	|:star: [PROFILE](#profile) 		|
+|:star: [ALIAS](#alias)		|:star: [IMAGE](#image)		|:star: [USERROLE](#userrole)		|
+|:star: [APIKEY](#apikey)	|:star: [LAYER](#layer)		|:star: [SIGNUP](#signup)			|
+|:star: [AVATAR](#avatar)	|:star: [LOGIN](#login)		|:star: [TITLE](#title)				|
+|:star: [BOOKING](#booking)	|:star: [LOGOUT](#logout)	|:star: [UPLOAD](#upload)			|
+|:star: [CANVAS](#canvas)	|:star: [PASSWORD](#password)|									|
+|:star: [CLOSE](#close)		|:star: [PAYMENT](#payment)	|									|
+|:star: [CREATE](#create)	|:star: [PREVIEW](#preview)	|									|
+|:star: [CURRENCY](#currency)|:star: [PRICE](#price)	|:star: [WHOISONLINE](#whoisonline)	|
 		
 
 ## ADDRESS
@@ -154,7 +157,7 @@ POST Input:
 
 POST Output: 
 ```
-{"address":"1Fvxg6UX11zDLdcaQdWakbbvpv375CFoJq","sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","category":"cat","parts":{"background":1,"body":11,"fur":5,"eyes":8,"mouth":3,"accessorie":6},"imageData":"data:image\/png;base64,iVB..."}
+{"address":"1Fvxg6UX11zDLdcaQdWakbbvpv375CFoJq","sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","canvas":"cat","parts":{"background":1,"body":11,"fur":5,"eyes":8,"mouth":3,"accessorie":6},"imageData":"data:image\/png;base64,iVB..."}
 ```
 
 GET Input: 
@@ -186,14 +189,14 @@ POST Output:
 {"success":true}
 ```
 
-## CATEGORY
+## CANVAS
 
-If user session is alive, user can update current category (called as name of avatar). 
+If user session is alive, user can update current canvas (called as name of avatar). 
 Hashtags (comma separated) are describing the attributes for searching.
 
 POST Input:
 ```
-{module : "category", categoryId : categoryId, name: name, hashtag: hashtag}
+{module : "canvas", canvasId : canvasId, name: name, hashtag: hashtag}
 ```
 
 POST Output: 
@@ -219,9 +222,9 @@ POST Output:
 
 ## CREATE 
 
-If user session is alive, a new category with a basic set of layers will be created.
-The category will hold an random artifical name.
-Each category has a selection of layers.
+If user session is alive, a new canvas with a basic set of layers will be created.
+The canvas will hold an random artifical name.
+Each canvas has a selection of layers.
 Layernames as default are background, body, fur, eye, mouth and accessorie.
 
 POST Input: 
@@ -231,21 +234,33 @@ POST Input:
 
 POST Output: 
 ```
-{"userId":"2","category":"Yellowed_Gharial","categoryId":13,"layer":[{"layerId":25,"layerName":"background","position":1},{"layerId":26,"layerName":"body","position":2},{"layerId":27,"layerName":"fur","position":3},{"layerId":28,"layerName":"eyes","position":4},{"layerId":29,"layerName":"mouth","position":5},{"layerId":30,"layerName":"accessorie","position":6}]}
+{"userId":"2","canvas":"Yellowed_Gharial","canvasId":13,"layer":[{"layerId":25,"layerName":"background","position":1},{"layerId":26,"layerName":"body","position":2},{"layerId":27,"layerName":"fur","position":3},{"layerId":28,"layerName":"eyes","position":4},{"layerId":29,"layerName":"mouth","position":5},{"layerId":30,"layerName":"accessorie","position":6}]}
 ```
 
 ## CURRENCY
 
 If user session is alive, a list currency will be responded.
 All currency properties hold an "supported" attribute.
-Intern shortname (3 chars) of crypto currency will be used.
+Intern shortname (3 chars) of crypto currency will be used. 
+POST update current currency of canvas.
+GET prepared information set about all useful crypto currencies (wikipedia).
 
 POST Input:
+```
+{module : "currency", canvasId : canvasId, currency : currency}
+```
+
+POST Output: 
+```
+{"success":true}
+```
+
+GET Input:
 ```
 {module : "currency"}
 ```
 
-POST Output:
+GET Output:
 ```
 [{"release":2009,"currency":"Bitcoin","symbol":["BTC","XBT","₿"],"supported":false,"notes":"The first and most widely used decentralized ledger currency, with the highest market capitalization."},...]
 ```
@@ -257,7 +272,7 @@ favors by other designer, will responded.
 
 POST Input: 
 ```
-{module : "hashtag", categoryId : categoryId}
+{module : "hashtag", canvasId : canvasId}
 ```
 
 POST Output: 
@@ -267,7 +282,7 @@ POST Output:
 
 GET Input: 
 ```
-{module : "hashtag", categoryId : categoryId}
+{module : "hashtag", canvasId : canvasId}
 ```
 
 GET Output: 
@@ -275,16 +290,41 @@ GET Output:
 {"hashtags":["beauty","active","cute",""]}
 ```
 
+## IMAGE
+
+If user session is alive, given file id will changed into file.
+GET deliver the current file into browser. POST deliver requested image as json data structure.
+
+POST Input: 
+```
+{module : "image", fileId : fileId}
+```
+
+POST Output: 
+```
+{"fileId":"1","width":256,"height":256,"imageData":"data:image\/png;base64,iVBORw0K.."}
+```
+
+GET Input: 
+```
+{module : "image", fileId : fileId}
+```
+
+GET Output: 
+```
+�PNG  IHDR�?1...
+```
+
 ## Layer
 
 If user session is alive, user can update current layer name.
 The position determind the order of each image layer. 
 Lower position is similar to the bottom and higher position is related near to top.
-PUT insert a new layer and POST update a layer.
+PUT insert a new layer. POST update a layer. GET gives an json structure about requested layer.
 
 POST Input: 
 ```
-{module : "hashtag", categoryId : categoryId, name : name, position : position}
+{module : "hashtag", layerId : layerId, name : name, position : position}
 ```
 
 POST Output: 
@@ -294,12 +334,22 @@ POST Output:
 
 PUT Input: 
 ```
-{module : "hashtag", categoryId : categoryId, name : name, position : position}
+{module : "hashtag", canvasId : canvasId, name : name, position : position}
 ```
 
 PUT Output: 
 ```
 {"success":true}
+```
+
+GET Input: 
+```
+{module : "hashtag", layerId : layerId}
+```
+
+GET Output: 
+```
+{"id":"1","name":"accessorie","fileIds":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]}
 ```
 
 ## LOGIN
@@ -436,21 +486,31 @@ Input:
 
 Output: 
 ```
-{"address":"1Fvxg6UX11zDLdcaQdWakbbvpv375CFoJq","sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","category":"cat","parts":{"background":1,"body":11,"fur":5,"eyes":8,"mouth":3,"accessorie":6},"imageData":"data:image\/png;base64,iVB..."}
+{"address":"1Fvxg6UX11zDLdcaQdWakbbvpv375CFoJq","sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","canvas":"cat","parts":{"background":1,"body":11,"fur":5,"eyes":8,"mouth":3,"accessorie":6},"imageData":"data:image\/png;base64,iVB..."}
 ```
 
 ## PRICE
 
-If user session is alive, designer can update price and currency for current layer.
+If user session is alive, designer can update price for current file.
 
 POST Input:
 ```
-{module : "price", fileId : fileId, price : price, currency : currency }
+{module : "price", fileId : fileId, price : price }
 ```
 
 POST Output: 
 ```
 {"success":true}
+```
+
+GET Input:
+```
+{module : "price", fileId : fileId }
+```
+
+GET Output: 
+```
+{"fee":"0.000000000000000000","currency":"EOS"}
 ```
 
 ## PROFILE
@@ -509,7 +569,7 @@ GET Output:
 ## TITLE 
 
 If user session is alive, 10 random proposals of an titel, 
-label or description for category or layer will be generated. 
+label or description for canvas or layer will be generated. 
 
 POST Input: 
 ```
@@ -567,7 +627,7 @@ GET Output:
 [{"id":1,"name":"USER"},{"id":2,"name":"DESIGNER"},{"id":4,"name":"DEVELOPER"}]
 ```
 
-## WHOISONLINE
+## WHOISONLINE [Top](#current-available-modules)
 
 Storing active session id in database and updating table data. 
 Inform about counter of current online users and used last possible IP address.

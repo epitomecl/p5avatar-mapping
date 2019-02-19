@@ -13,11 +13,12 @@ use modules\Alias as Alias;
 use modules\ApiKey as ApiKey;
 use modules\Avatar as Avatar;
 use modules\Booking as Booking;
-use modules\Category as Category;
+use modules\Canvas as Canvas;
 use modules\Close as Close;
 use modules\Create as Create;
 use modules\Currency as Currency;
 use modules\HashTag as HashTag;
+use modules\Image as Image;
 use modules\Layer as Layer;
 use modules\Login as Login;
 use modules\Logout as Logout;
@@ -130,11 +131,11 @@ try {
 			$fileIds = getParam($_POST, "fileIds", "array"); 
 			(new Booking($mysqli))->doPost($userId, $fileIds);
 			break;			
-		case "CATEGORY":
-			$categoryId = getParam($_POST, "categoryId");
+		case "CANVAS":
+			$canvasId = getParam($_POST, "canvasId");
 			$name = getParam($_POST, "name");	
 			$hashtag = getParam($_POST, "hashtag");			
-			(new Category($mysqli))->doPost($categoryId, $name, $hashtag);
+			(new Canvas($mysqli))->doPost($canvasId, $name, $hashtag);
 			break;			
 		case "CLOSE":
 			$userId = getParam($_POST, "userId");
@@ -145,29 +146,49 @@ try {
 			(new Create($mysqli))->doPost($userId);
 			break;
 		case "CURRENCY":
-			(new Currency())->doPost();
+			$currency = new Currency($mysqli);
+			if ($httpMethod == "POST") {
+				$canvasId = getParam($_POST, "canvasId");
+				$currency = getParam($_POST, "currency"); 
+				$currency->doPost($canvasId, $currency);
+			} else {
+				$currency->doGet();
+			}
 			break;
 		case "HASHTAG":
 			$hashtag = new HashTag($mysqli);
 			if ($httpMethod == "POST") {		
-				$categoryId = getParam($_POST, "categoryId");
-				$hashtag->doPost($categoryId);
+				$canvasId = getParam($_POST, "canvasId");
+				$hashtag->doPost($canvasId);
 			} else {
 				$hashtag->doGet();
 			}
 			break;
+		case "IMAGE":
+			$image = new Image($mysqli);
+			if ($httpMethod == "POST") {		
+				$fileId = getParam($_POST, "fileId");
+				$image->doPost($fileId);
+			} else {
+				$fileId = getParam($_GET, "fileId");
+				$image->doGet($fileId);
+			}
+			break;			
 		case "LAYER":
 			$layer = new Layer($mysqli);
 			if ($httpMethod == "POST") {
-				$categoryId = getParam($_POST, "categoryId", "int");	
+				$layerId = getParam($_POST, "layerId", "int");	
 				$name = getParam($_POST, "name");
 				$position = getParam($_POST, "position", "int");
-				$layer->doPost($categoryId, $name, $position);
+				$layer->doPost($layerId, $name, $position);
 			} elseif ($httpMethod == "PUT") {
-				$categoryId = getParam($_POST, "categoryId", "int");
-				$name = getParam($_POST, "name");
-				$position = getParam($_POST, "position", "int");
-				$layer->doPut($categoryId, $name, $position);				
+				$canvasId = getParam($_PUT, "canvasId", "int");
+				$name = getParam($_PUT, "name");
+				$position = getParam($_PUT, "position", "int");
+				$layer->doPut($canvasId, $name, $position);				
+			} else {
+				$layerId = getParam($_GET, "layerId", "int");	
+				$layer->doGet($layerId);				
 			}
 			break;
 		case "LOGIN":
@@ -186,9 +207,9 @@ try {
 				$email = getParam($_POST, "email");		
 				$phone = getParam($_POST, "phone");
 			} elseif ($httpMethod == "PUT") {
-				$token = getParam($_POST, "token");		
-				$password = getParam($_POST, "password");		
-				$password2 = getParam($_POST, "password2");
+				$token = getParam($_PUT, "token");		
+				$password = getParam($_PUT, "password");		
+				$password2 = getParam($_PUT, "password2");
 				$password->doPut($token, $password, $password2);
 			} else {
 				$token = getParam($_GET, "token");	
@@ -202,8 +223,8 @@ try {
 				$fileIds = getParam($_POST, "fileIds", "array"); 
 				$payment->doPost($userId, $fileIds);
 			} elseif ($httpMethod == "PUT") {
-				$userId = getParam($_POST, "userId", "int");
-				$fileIds = getParam($_POST, "fileIds", "array"); 
+				$userId = getParam($_PUT, "userId", "int");
+				$fileIds = getParam($_PUT, "fileIds", "array"); 
 				$payment->doPut($userId, $fileIds);				
 			}  elseif ($httpMethod == "DEL") {
 				$userId = getParam($_POST, "userId", "int");
@@ -220,10 +241,15 @@ try {
 			(new Preview($mysqli))->doPost($fileIds);
 			break;			
 		case "PRICE":
-			$priceId = intval(getParam($_POST, "priceId", "int")); 
-			$price = doubleval(getParam($_POST, "price"));  
-			$currency = getParam($_POST, "currency"); 
-			(new Price($mysqli))->doPost($priceId, $price, $currency);
+			$price = new Price($mysqli);
+			if ($httpMethod == "POST") {
+				$fileId = getParam($_POST, "fileId", "int"); 
+				$fee = doubleval(getParam($_POST, "fee"));  
+				$price->doPost($fileId, $fee);
+			} else {
+				$fileId = getParam($_GET, "fileId", "int"); 
+				$price->doGet($fileId);
+			}
 			break;
 		case "PROFILE":
 			$profile = new Profile($mysqli);
@@ -261,7 +287,7 @@ try {
 			break;
 		case "UPLOAD":
 			$file = $_FILES["file"];
-			$layerId = intval(getParam($_POST, "layerId"));
+			$layerId = getParam($_POST, "layerId", "int");
 			$divId = getParam($_POST, "divId");
 			$unlink = getParam($_POST, "unlink", "array");
 			(new FileUpload($mysqli, $path))->doPost($file, $layerId, $divId, $unlink);
@@ -271,7 +297,7 @@ try {
 			if ($httpMethod == "POST") {
 				$userRole->doPost();
 			} else {
-				$userId = getParam($_POST, "userId");
+				$userId = getParam($_GET, "userId", "int");
 				$userRole->doGet($userId);
 			}
 			break;
