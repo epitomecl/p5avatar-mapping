@@ -67,15 +67,15 @@ https://api.avarkey.com/api/
 
 | A - C 					| H - P 					| P - W								|
 | ------------------------- | ------------------------- | --------------------------------- |
-|:star: [ADDRESS](#address)	|:star: [HASHTAG](#hashtag)	|:star: [PROFILE](#profile) 		|
-|:star: [ALIAS](#alias)		|:star: [IMAGE](#image)		|:star: [USERROLE](#userrole)		|
-|:star: [APIKEY](#apikey)	|:star: [LAYER](#layer)		|:star: [SIGNUP](#signup)			|
-|:star: [AVATAR](#avatar)	|:star: [LOGIN](#login)		|:star: [TITLE](#title)				|
-|:star: [BOOKING](#booking)	|:star: [LOGOUT](#logout)	|:star: [UPLOAD](#upload)			|
-|:star: [CANVAS](#canvas)	|:star: [PASSWORD](#password)|									|
-|:star: [CLOSE](#close)		|:star: [PAYMENT](#payment)	|									|
-|:star: [CREATE](#create)	|:star: [PREVIEW](#preview)	|									|
-|:star: [CURRENCY](#currency)|:star: [PRICE](#price)	|:star: [WHOISONLINE](#whoisonline)	|
+|:wink: [ADDRESS](#address)	|:wink: [HASHTAG](#hashtag)	|:grin: [PROFILE](#profile) 		|
+|:wink: [ALIAS](#alias)		|:wink: [IMAGE](#image)		|:wink: [USERROLE](#userrole)		|
+|:wink: [APIKEY](#apikey)	|:wink: [LAYER](#layer)		|:wink: [SIGNUP](#signup)			|
+|:wink: [AVATAR](#avatar)	|:wink: [LOGIN](#login)		|:wink: [TITLE](#title)				|
+|:wink: [BOOKING](#booking)	|:wink: [LOGOUT](#logout)	|:wink: [UPLOAD](#upload)			|
+|:wink: [CANVAS](#canvas)	|:wink: [PASSWORD](#password)|									|
+|:rage: [CLOSE](#close)		|:wink: [PAYMENT](#payment)	|									|
+|:wink: [CREATE](#create)	|:wink: [PREVIEW](#preview)	|									|
+|:wink: [CURRENCY](#currency)|:wink: [PRICE](#price)	|:eyes: [WHOISONLINE](#whoisonline)	|
 		
 
 ## ADDRESS
@@ -103,6 +103,8 @@ GET Output:
 {"success":true}
 ```
 
+<div style="text-align: right">[Top](#current-available-modules)</div>
+
 ## ALIAS
 
 If user session is alive, the user can update his profile data 
@@ -117,6 +119,8 @@ POST Output:
 ```
 {"success":true}
 ```
+
+<div style="text-align: right">[Top](#current-available-modules)</div>
 
 ## APIKEY
 
@@ -145,6 +149,8 @@ GET Output:
 {"apikey":"46eb20c6feae6216dd5763e7956dcdf4e98c98883f198d01a4112541cd622670"}
 ```
 
+<div style="text-align: right">[Top](#current-available-modules)</div>
+
 ## AVATAR
 
 Build cute cat avatar based on default avatar by POST.
@@ -170,6 +176,8 @@ GET Output:
 �PNG  IHDR�?1	pHYs���+�IDATx����N�0@�e���r�PE�k2 ...
 ```
 
+<div style="text-align: right">[Top](#current-available-modules)</div>
+
 ## BOOKING
 
 Preparation for building an own avatar based on selected files. 
@@ -189,6 +197,8 @@ POST Output:
 {"success":true}
 ```
 
+<div style="text-align: right">[Top](#current-available-modules)</div>
+
 ## CANVAS
 
 If user session is alive, user can update current canvas (called as name of avatar). 
@@ -203,6 +213,8 @@ POST Output:
 ```
 {"success":true}
 ```
+
+<div style="text-align: right">[Top](#current-available-modules)</div>
 
 ## CLOSE
 
@@ -220,6 +232,8 @@ POST Output:
 {"success":true}
 ```
 
+<div style="text-align: right">[Top](#current-available-modules)</div>
+
 ## CREATE 
 
 If user session is alive, a new canvas with a basic set of layers will be created.
@@ -236,6 +250,8 @@ POST Output:
 ```
 {"userId":"2","canvas":"Yellowed_Gharial","canvasId":13,"layer":[{"layerId":25,"layerName":"background","position":1},{"layerId":26,"layerName":"body","position":2},{"layerId":27,"layerName":"fur","position":3},{"layerId":28,"layerName":"eyes","position":4},{"layerId":29,"layerName":"mouth","position":5},{"layerId":30,"layerName":"accessorie","position":6}]}
 ```
+
+<div style="text-align: right">[Top](#current-available-modules)</div>
 
 ## CURRENCY
 
@@ -265,6 +281,8 @@ GET Output:
 [{"release":2009,"currency":"Bitcoin","symbol":["BTC","XBT","₿"],"supported":false,"notes":"The first and most widely used decentralized ledger currency, with the highest market capitalization."},...]
 ```
 
+<div style="text-align: right">[Top](#current-available-modules)</div>
+
 ## HASHTAG
 
 If user session is alive, a common set of hashtags, 
@@ -290,6 +308,8 @@ GET Output:
 {"hashtags":["beauty","active","cute",""]}
 ```
 
+<div style="text-align: right">[Top](#current-available-modules)</div>
+
 ## IMAGE
 
 If user session is alive, given file id will changed into file.
@@ -314,6 +334,8 @@ GET Output:
 ```
 �PNG  IHDR�?1...
 ```
+
+<div style="text-align: right">[Top](#current-available-modules)</div>
 
 ## Layer
 
@@ -352,6 +374,8 @@ GET Output:
 {"id":"1","name":"accessorie","fileIds":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]}
 ```
 
+<div style="text-align: right">[Top](#current-available-modules)</div>
+
 ## LOGIN
 
 Gives access to backend service, open a session. 
@@ -368,6 +392,8 @@ POST Output:
 {"userId":1}
 ```
 
+<div style="text-align: right">[Top](#current-available-modules)</div>
+
 ## LOGOUT
 
 User session will be closed.
@@ -381,6 +407,8 @@ POST Output:
 ```
 {"success":true}
 ```
+
+<div style="text-align: right">[Top](#current-available-modules)</div>
 
 ## PASSWORD
 
@@ -418,6 +446,8 @@ GET Output:
 ```
 {"success":true}
 ```
+
+<div style="text-align: right">[Top](#current-available-modules)</div>
 
 ## PAYMENT 
 
@@ -471,6 +501,8 @@ DEL Output:
 {"success":true}
 ```
 
+<div style="text-align: right">[Top](#current-available-modules)</div>
+
 ## PREVIEW
 
 Build preview of avatar based on selected files. 
@@ -488,6 +520,8 @@ Output:
 ```
 {"address":"1Fvxg6UX11zDLdcaQdWakbbvpv375CFoJq","sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","canvas":"cat","parts":{"background":1,"body":11,"fur":5,"eyes":8,"mouth":3,"accessorie":6},"imageData":"data:image\/png;base64,iVB..."}
 ```
+
+<div style="text-align: right">[Top](#current-available-modules)</div>
 
 ## PRICE
 
@@ -512,6 +546,8 @@ GET Output:
 ```
 {"fee":"0.000000000000000000","currency":"EOS"}
 ```
+
+<div style="text-align: right">[Top](#current-available-modules)</div>
 
 ## PROFILE
 
@@ -541,6 +577,8 @@ GET Output:
 {"firstName":"Marian","lastName":"Kulisch","alias":"Schlaraffenland","email":"s681562@gmail.com","imageData":"data:image\/png;base64,iVBORw0KGgoAAAAN.."}
 ```
 
+<div style="text-align: right">[Top](#current-available-modules)</div>
+
 ## SIGNUP
 To given eMail address an random link will be send. If eMail has wrong spelling, success will be false. 
 The user has to check also spam folder. Inside the email is a link with access code. 
@@ -566,6 +604,8 @@ GET Output:
 {"success":true}
 ```
 
+<div style="text-align: right">[Top](#current-available-modules)</div>
+
 ## TITLE 
 
 If user session is alive, 10 random proposals of an titel, 
@@ -580,6 +620,8 @@ POST Output:
 ```
 ["Brave Octopus","Confused Crane","Selfish Antelope","Wide-eyed Peacock","Weary Kookaburra","Confused Bison","Xenophobic Llama","Yellowed Koala","Confused Gentoo","Xenophobic Yak"]
 ```
+
+<div style="text-align: right">[Top](#current-available-modules)</div>
 
 ## UPLOAD
 
@@ -598,6 +640,8 @@ POST Output:
 ```
 [{"divId":1, "fileId":222, "fileName":"93B31277490D8E2C1E85D77EF4B516E7.png", "original":"fur03.png" : "assigned":true}]
 ```
+
+<div style="text-align: right">[Top](#current-available-modules)</div>
 
 ## USERROLE
 
@@ -627,7 +671,9 @@ GET Output:
 [{"id":1,"name":"USER"},{"id":2,"name":"DESIGNER"},{"id":4,"name":"DEVELOPER"}]
 ```
 
-## WHOISONLINE [Top](#current-available-modules)
+<div style="text-align: right">[Top](#current-available-modules)</div>
+
+## WHOISONLINE
 
 Storing active session id in database and updating table data. 
 Inform about counter of current online users and used last possible IP address.
@@ -642,3 +688,4 @@ POST Output:
 {"counter":15770,"ip":"61.98.24.84"}
 ```
 
+<div style="text-align: right">[Top](#current-available-modules)</div>
