@@ -80,7 +80,7 @@ class AvatarBuilder {
 		if($seed) srand();
 		
 		$data = new \stdClass;
-		$data->category = "cat";
+		$data->canvas = "cat";
 		$data->parts = $parts;
 		$data->avatar = $avatar;
 		
@@ -96,7 +96,7 @@ class AvatarBuilder {
 		$data = new \stdClass;
 		$data->address = $address;
 		$data->sha256 = $hash;
-		$data->category = $object->category;		
+		$data->canvas = $object->canvas;		
 		$data->parts = $object->parts;
 		$data->imageData = sprintf("data:image/png;base64,%s", base64_encode($source));
 
@@ -106,11 +106,11 @@ class AvatarBuilder {
 	public function previewAvatar($mysqli, $fileIds) {
 		$data = array();
 		
-		$sql = "SELECT category.name as categoryName, layer.name as layerName, file.id as fileId, ";
-		$sql .= "CONCAT(category.name,'_',category.id,'/',filename) AS fileName, file.ownerId ";
+		$sql = "SELECT canvas.name as canvasName, layer.name as layerName, file.id as fileId, ";
+		$sql .= "CONCAT(canvas.name,'_',canvas.id,'/',filename) AS fileName, file.ownerId ";
 		$sql .= "FROM file ";
 		$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
-		$sql .= "LEFT JOIN category ON (category.id = layer.categoryId) ";
+		$sql .= "LEFT JOIN canvas ON (canvas.id = layer.canvasId) ";
 		$sql .= sprintf("WHERE file.id IN (%s) ", implode(",", $fileIds));
 		$sql .= "ORDER BY layer.position ";
 
@@ -128,10 +128,10 @@ class AvatarBuilder {
 		imagefill($avatar,0,0,$white);
 
 		// add parts
-		$category = "";
+		$canvas = "";
 		$parts = array();
 		foreach($data as $index => $row){
-			$category = trim($row["categoryName"]);
+			$canvas = trim($row["canvasName"]);
 			$filename = trim($row["fileName"]);
 			$layer = trim($row["layerName"]);
 			$id =  intval($row["fileId"]);
@@ -146,13 +146,13 @@ class AvatarBuilder {
 		}
 		
 		$assigned = false;
-		$tc  = imagecolorallocate($image, 255, 0, 0);
+		$tc  = imagecolorallocate($avatar, 255, 0, 0);
 		foreach($data as $index => $row){
 			$ownerId = intval($row["ownerId"]);
 			$text = sprintf("N/A %d", $ownerId);
 			
 			if (intval($row["ownerId"]) > 0) {
-				imagestring($image, 5, 5, 5, $text, $tc);
+				imagestring($avatar, 5, 5, 5, $text, $tc);
 				$assigned = true;
 				break;
 			}
@@ -179,7 +179,7 @@ class AvatarBuilder {
 		$source = $this->prepareBackground($avatar);
 		
 		$data = new \stdClass;
-		$data->category = $category;		
+		$data->canvas = ucfirst($canvas);		
 		$data->parts = $parts;
 		$data->imageData = sprintf("data:image/png;base64,%s", base64_encode($source));
 
@@ -189,11 +189,11 @@ class AvatarBuilder {
 	public function getAvatarImageSource($mysqli, $fileIds) {
 		$data = array();
 		
-		$sql = "SELECT category.name as categoryName, layer.name as layerName, file.id as fileId, ";
-		$sql .= "CONCAT(category.name,'_',category.id,'/',filename) AS fileName, file.ownerId ";
+		$sql = "SELECT canvas.name as canvasName, layer.name as layerName, file.id as fileId, ";
+		$sql .= "CONCAT(canvas.name,'_',canvas.id,'/',filename) AS fileName, file.ownerId ";
 		$sql .= "FROM file ";
 		$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
-		$sql .= "LEFT JOIN category ON (category.id = layer.categoryId) ";
+		$sql .= "LEFT JOIN canvas ON (canvas.id = layer.canvasId) ";
 		$sql .= sprintf("WHERE file.id IN (%s) ", implode(",", $fileIds));
 		$sql .= "ORDER BY layer.position ";
 

@@ -71,6 +71,53 @@ class Canvas implements JsonSerializable{
 		echo json_encode($this, JSON_UNESCAPED_UNICODE);
 	}
 	
+	/**
+	* something describes this method
+	*
+	* @param int $canvasId The id of canvas
+	*/	
+	public function doGet($canvasId) {
+		$mysqli = $this->mysqli;
+		
+		$data = NULL;
+		$sql = "SELECT userId, name, currency, ";
+		$sql .= "CONCAT('{\"width\":',width,',\"height\":',height,'}') AS size ";
+		$sql .= "FROM canvas ";
+		$sql .= "LEFT JOIN user_canvas ON (user_canvas.canvasId = canvas.id) ";
+		$sql .= "WHERE canvas.id=%d;";
+		$sql = sprintf($sql, $canvasId);
+		if ($result = $mysqli->query($sql)) {
+			if ($row = $result->fetch_assoc()) {
+				$data = new \stdClass;
+				$data->userId = $row["userId"];
+				$data->name = trim($row["name"]);
+				$data->currency =  trim($row["currency"]);
+				$data->size = json_decode(trim($row["size"]));
+				$data->layerIds = array();
+			}
+		} else {
+			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+		}	
+
+		$sql = "SELECT id, name FROM layer ";
+		$sql .= "WHERE canvasId=%d ";
+		$sql .= "ORDER BY position;";
+		$sql = sprintf($sql, $canvasId);
+		if ($result = $mysqli->query($sql)) {
+			while ($row = $result->fetch_assoc()) {
+				array_push($data->layerIds, intval($row["id"]));
+			}
+		} else {
+			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+		}
+		
+		if (empty($data) ) {
+			throw new Exception(sprintf("%s, %s", get_class($this), 'Not Found'), 404);			
+		}
+		
+		echo json_encode($data, JSON_UNESCAPED_UNICODE);		
+	}
+	
 	private function getCanvasName($mysqli, $canvasId) {
 		$value = "";
 		$sql = "SELECT CONCAT(canvas.name,'_',canvas.id,'/') AS canvasName WHERE id=%d";

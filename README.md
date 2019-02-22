@@ -73,6 +73,7 @@ https://api.avarkey.com/api/
 |:wink: [AVATAR](#avatar)	|:wink: [LOGIN](#login)		|:wink: [TITLE](#title)				|
 |:wink: [BOOKING](#booking)	|:wink: [LOGOUT](#logout)	|:wink: [UPLOAD](#upload)			|
 |:wink: [CANVAS](#canvas)	|:wink: [PASSWORD](#password)|									|
+|:wink: [CANVASES](#canvases)|							|									|
 |:rage: [CLOSE](#close)		|:wink: [PAYMENT](#payment)	|									|
 |:wink: [CREATE](#create)	|:wink: [PREVIEW](#preview)	|									|
 |:wink: [CURRENCY](#currency)|:wink: [PRICE](#price)	|:eyes: [WHOISONLINE](#whoisonline)	|
@@ -216,6 +217,34 @@ POST Output:
 
 <p align="right"><a href="#current-available-modules">Top</a></p>
 
+## CANVASES
+
+If user session is alive, start filtering for available canvases. 
+Searching for name, supports pagination, order by modified or simply returns current Top Five.
+Returns a list with names, expected currencies, sizes, file counter and canvas ids.
+
+POST Input:
+```
+{module : "canvases", search : "hamster", order: "asc", start: 0, offset: 10}
+```
+
+POST Output: 
+```
+[{"id":"13","name":"Yellowed_Gharial","currency":"EOS","userId":"2","counter":"65"},...]
+```
+
+GET Input:
+```
+{module : "canvases"}
+```
+
+GET Output: 
+```
+[{"id":"13","name":"Yellowed_Gharial","currency":"EOS","userId":"2","counter":"65"},...]
+```
+
+<p align="right"><a href="#current-available-modules">Top</a></p>
+
 ## CLOSE
 
 If user session is alive, user session will be closed.
@@ -240,15 +269,17 @@ If user session is alive, a new canvas with a basic set of layers will be create
 The canvas will hold an random artifical name.
 Each canvas has a selection of layers.
 Layernames as default are background, body, fur, eye, mouth and accessorie.
+Standard initialization for canvas are width and height with 256 pixel.
+Width and height are at least 256 pixel. The standard currency is EOS.
 
 POST Input: 
 ```
-{module : "create", userId : userId}
+{module : "create", userId : userId, width : width, height : height}
 ```
 
 POST Output: 
 ```
-{"userId":"2","canvas":"Yellowed_Gharial","canvasId":13,"layer":[{"layerId":25,"layerName":"background","position":1},{"layerId":26,"layerName":"body","position":2},{"layerId":27,"layerName":"fur","position":3},{"layerId":28,"layerName":"eyes","position":4},{"layerId":29,"layerName":"mouth","position":5},{"layerId":30,"layerName":"accessorie","position":6}]}
+{"userId":"2","canvas":"Yellowed_Gharial","size":{"width":256,"height":256},"canvasId":13,"layer":[{"layerId":25,"layerName":"background","position":1},{"layerId":26,"layerName":"body","position":2},{"layerId":27,"layerName":"fur","position":3},{"layerId":28,"layerName":"eyes","position":4},{"layerId":29,"layerName":"mouth","position":5},{"layerId":30,"layerName":"accessorie","position":6}]}
 ```
 
 <p align="right"><a href="#current-available-modules">Top</a></p>
@@ -322,7 +353,7 @@ POST Input:
 
 POST Output: 
 ```
-{"fileId":"1","width":256,"height":256,"imageData":"data:image\/png;base64,iVBORw0K.."}
+{"fileId":"1","fileName":"background_5.png","width":256,"height":256,"currency":"EOS","fee":"0.000000000000000000","imageData":"data:image\/png;base64,iVBORw0K.."}
 ```
 
 GET Input: 
@@ -371,7 +402,7 @@ GET Input:
 
 GET Output: 
 ```
-{"id":"1","name":"accessorie","fileIds":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]}
+{"id":"1","name":"accessorie","position":2,"fileIds":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]}
 ```
 
 <p align="right"><a href="#current-available-modules">Top</a></p>
@@ -509,16 +540,27 @@ Build preview of avatar based on selected files.
 The user selected from each layer one file with its file id.
 For instance 2, 22, 35, 56, 68, 77.
 Based on order of layer the avatar will be build.
-Avatar in use will be marked.
+Avatar in use will be marked. 
+GET use canvas id for generating random preview.
 
-Input:
+POST Input:
 ```
 {module : "preview", fileIds : fileIds }
 ```
 
-Output: 
+POST Output: 
 ```
-{"address":"1Fvxg6UX11zDLdcaQdWakbbvpv375CFoJq","sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","canvas":"cat","parts":{"background":1,"body":11,"fur":5,"eyes":8,"mouth":3,"accessorie":6},"imageData":"data:image\/png;base64,iVB..."}
+{"address":"1Fvxg6UX11zDLdcaQdWakbbvpv375CFoJq","sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","currency":"EOS","fee":"0.000000000000000000","canvas":"cat","parts":{"background":1,"body":11,"fur":5,"eyes":8,"mouth":3,"accessorie":6},"imageData":"data:image\/png;base64,iVB..."}
+```
+
+GET Input:
+```
+{module : "preview", canvasId : canvasId }
+```
+
+GET Output: 
+```
+{"address":"1Fvxg6UX11zDLdcaQdWakbbvpv375CFoJq","sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","currency":"EOS","fee":"0.000000000000000000","canvas":"cat","parts":{"background":1,"body":11,"fur":5,"eyes":8,"mouth":3,"accessorie":6},"imageData":"data:image\/png;base64,iVB..."}
 ```
 
 <p align="right"><a href="#current-available-modules">Top</a></p>

@@ -27,7 +27,9 @@ class Image {
 		$fileName = "";
 		$width = 0;
 		$height = 0;
-		$sql = "SELECT file.id, file.userId, filename, original, width, height, ";
+		$fee;
+		$currency = "";
+		$sql = "SELECT file.id, file.userId, filename, original, fee, currency, width, height, ";
 		$sql .= "CONCAT(canvas.name,'_',canvas.id,'/') AS canvasname FROM file ";
 		$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";		
 		$sql .= "LEFT JOIN canvas ON (canvas.id = layer.canvasId) ";
@@ -39,6 +41,8 @@ class Image {
 				$fileName = trim($row["filename"]);
 				$width = intval($row["width"]);
 				$height = intval($row["height"]);
+				$fee = $row["fee"];
+				$currency = $row["currency"];
 			}
 		} else {
 			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
@@ -52,8 +56,11 @@ class Image {
 		
 		$data = new \stdClass();
 		$data->fileId = $fileId;
+		$data->fileName = $fileName;
 		$data->width = $width;
 		$data->height = $height;
+		$data->fee = sprintf('%g', $fee);
+		$data->currency = $currency;
 		$data->imageData = $this->getPngImageData($image);
 		
 		echo json_encode($data, JSON_UNESCAPED_UNICODE);

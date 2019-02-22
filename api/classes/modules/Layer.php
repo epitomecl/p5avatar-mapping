@@ -84,13 +84,14 @@ class Layer  implements JsonSerializable{
 		$mysqli = $this->mysqli;
 		$data = NULL;
 		
-		$sql = "SELECT id, name FROM layer WHERE id=%d;";
+		$sql = "SELECT id, name, position FROM layer WHERE id=%d;";
 		$sql = sprintf($sql, $layerId);
 		if ($result = $mysqli->query($sql)) {
 			if ($row = $result->fetch_assoc()) {
 				$data = new \stdClass;
-				$data->id = $row["id"];
+				$data->id = intval($row["id"]);
 				$data->name = trim($row["name"]);
+				$data->position = intval($row["id"]);
 				$data->fileIds = array();
 			}
 		} else {

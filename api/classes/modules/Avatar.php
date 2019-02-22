@@ -34,7 +34,7 @@ class Avatar {
 	*/		
 	public function doGet($address) {
 		$mysqli = $this->mysqli;
-		$path = dirname(__FILE__).'/../../images/avatars/';
+		$path = realpath(dirname(__FILE__).'/../../images/avatars')."/";
 		$address = strip_tags(stripcslashes(trim($address)));
 		$fileName = "";
 		$sql = sprintf("SELECT filename FROM user_avatar WHERE address = '%s'", $address);

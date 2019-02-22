@@ -30,6 +30,7 @@ class Alias implements JsonSerializable{
 	*/	
 	public function doPost($userId, $alias) {
 		$mysqli = $this->mysqli;
+		$alias = strip_tags(stripcslashes(trim($alias)));
 		
 		if ($userId == 0) {
 			throw new Exception(sprintf("%s, %s", get_class($this), 'Not Found'), 404);

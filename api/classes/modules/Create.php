@@ -10,6 +10,7 @@ use \Exception as Exception;
 * The canvas will hold an random artifical name.
 * Each canvas has a selection of layers.
 * Layernames as default are background, body, fur, eye, mouth and accessorie.
+* Width and height are at least 256 pixel. The standard currency is EOS.
 */
 class Create {
 	private $mysqli;
@@ -18,15 +19,26 @@ class Create {
 		$this->mysqli = $mysqli;		
 	}
 	
-	public function doPost($userId) {
+	/**
+	* something describes this method
+	*
+	* @param int $userId The user id
+	* @param int $width The width of canvas (standard is 256)
+	* @param int $height The height of canvas (standard is 256)
+	* @param string $currency The currency of canvas (Standard is EOS).
+	*/		
+	public function doPost($userId, $width, $height, $currency) {
 		$mysqli = $this->mysqli;
 		$path = realpath(dirname(__FILE__).'/../../images/presets')."/";
 		$canvas = str_replace(" ", "_", (new Alliteration())->getName());
 		$layer = array("background", "body", "fur", "eyes", "mouth", "accessorie");
+		$width = ($width < 256) ? 256 : $width;
+		$height = ($height < 256) ? 256 : $height;
+		$currency = empty($currency) ? "EOS" : strip_tags(stripcslashes(trim($currency)));
 		$data = new \stdClass;	
 		
-		$sql = "INSERT INTO canvas SET name='%s', modified=NOW()";
-		$sql = sprintf($sql, $canvas);
+		$sql = "INSERT INTO canvas SET name='%s', width=%d, height=%d, currency='%s' modified=NOW()";
+		$sql = sprintf($sql, $canvas, $width, $height);
 		if ($mysqli->query($sql) === false) {
 			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
 		} else {
@@ -53,6 +65,7 @@ class Create {
 			$data->userId = $userId;
 			$data->canvas = $canvas;
 			$data->canvasId = $canvasId;
+			$data->size = json_decode(sprintf("{\"width\":%d, \"height\":%d}", $width, $height));
 			$data->layer = array();
 			
 			foreach ($layer as $index => $name) {

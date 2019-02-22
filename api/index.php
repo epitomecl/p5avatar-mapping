@@ -14,6 +14,7 @@ use modules\ApiKey as ApiKey;
 use modules\Avatar as Avatar;
 use modules\Booking as Booking;
 use modules\Canvas as Canvas;
+use modules\Canvases as Canvases;
 use modules\Close as Close;
 use modules\Create as Create;
 use modules\Currency as Currency;
@@ -92,7 +93,7 @@ try {
 				$address = getParam($_POST, "address");					
 				$address->doPost($userId, $avatarId, $address);
 			} else {
-				$userId = getParam($_POST, "userId");	
+				$userId = getParam($_GET, "userId");	
 				$address->doGet($userId);
 			}
 			break;		
@@ -122,7 +123,7 @@ try {
 				$address = getParam($_POST, "address");
 				$avatar->doPost($address);
 			} else {
-				$address = getParam($_POST, "address");
+				$address = getParam($_GET, "address");
 				$avatar->doGet($address);
 			}
 			break;
@@ -132,18 +133,42 @@ try {
 			(new Booking($mysqli))->doPost($userId, $fileIds);
 			break;			
 		case "CANVAS":
-			$canvasId = getParam($_POST, "canvasId");
-			$name = getParam($_POST, "name");	
-			$hashtag = getParam($_POST, "hashtag");			
-			(new Canvas($mysqli))->doPost($canvasId, $name, $hashtag);
-			break;			
+			$canvas = new Canvas($mysqli);
+			if ($httpMethod == "POST") {
+				$canvasId = getParam($_POST, "canvasId");
+				$name = getParam($_POST, "name");	
+				$hashtag = getParam($_POST, "hashtag");			
+				$canvas->doPost($canvasId, $name, $hashtag);
+			} else {
+				$canvasId = getParam($_GET, "canvasId");
+				$canvas->doGet($canvasId);
+			}
+			break;	
+		case "CANVASES":
+			$canvas = new Canvases($mysqli);
+			if ($httpMethod == "POST") {
+				$search = getParam($_POST, "search");
+				$order = getParam($_POST, "order");	
+				$start = getParam($_POST, "start", "int");
+				$offset = getParam($_POST, "offset", "int");				
+				$canvas->doPost($search, $order, $start, $offset);
+			} else {
+				$canvas->doGet();
+			}
+			break;				
 		case "CLOSE":
-			$userId = getParam($_POST, "userId");
+			$userId = getParam($_POST, "userId", "int");
 			(new Close($mysqli))->doGet($userId);
 			break;	
 		case "CREATE":
-			$userId = getParam($_POST, "userId");		
-			(new Create($mysqli))->doPost($userId);
+			$create = new Create($mysqli);
+			if ($httpMethod == "POST") {
+				$userId = getParam($_POST, "userId", "int");		
+				$width = getParam($_POST, "width", "int");	
+				$height = getParam($_POST, "height", "int");
+				$currency = getParam($_POST, "currency");
+				$create->doPost($userId, $width, $height, $currency);
+			}
 			break;
 		case "CURRENCY":
 			$currency = new Currency($mysqli);
@@ -227,18 +252,24 @@ try {
 				$fileIds = getParam($_PUT, "fileIds", "array"); 
 				$payment->doPut($userId, $fileIds);				
 			}  elseif ($httpMethod == "DEL") {
-				$userId = getParam($_POST, "userId", "int");
-				$fileIds = getParam($_POST, "fileIds", "array");
+				$userId = getParam($_DEL, "userId", "int");
+				$fileIds = getParam($_DEL, "fileIds", "array");
 				$payment->doDel($userId, $fileIds);		
 			} else {
-				$userId = getParam($_POST, "userId", "int");
-				$fileIds = getParam($_POST, "fileIds", "array");
+				$userId = getParam($_GET, "userId", "int");
+				$fileIds = getParam($_GET, "fileIds", "array");
 				$payment->doGet($userId, $fileIds);					
 			}
 			break;			
 		case "PREVIEW":
-			$fileIds = getParam($_POST, "fileIds", "array"); 
-			(new Preview($mysqli))->doPost($fileIds);
+			$preview = new Preview($mysqli);
+			if ($httpMethod == "POST") {
+				$fileIds = getParam($_POST, "fileIds", "array"); 
+				$preview->doPost($fileIds);
+			} else {
+				$canvasId = getParam($_GET, "canvasId", "int");
+				$preview->doGet($canvasId);
+			}
 			break;			
 		case "PRICE":
 			$price = new Price($mysqli);
