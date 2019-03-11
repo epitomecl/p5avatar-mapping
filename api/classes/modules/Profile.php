@@ -2,7 +2,6 @@
 
 namespace modules;
 
-use \JsonSerializable as JsonSerializable;
 use \Exception as Exception;
 
 /**
@@ -12,14 +11,8 @@ use \Exception as Exception;
 * An existing profile picture will independently from there original 
 * type always as base64 encoded png file image source delivered.
 */
-class Profile  implements JsonSerializable{
+class Profile {
 	private $mysqli;
-	
-	public function jsonSerialize() {
-		return array(
-			'success' => true
-        );
-    }
 	
 	public function __construct($mysqli) {
 		$this->mysqli = $mysqli;
@@ -68,6 +61,7 @@ class Profile  implements JsonSerializable{
 	private function storeProfileImage($picture, $base64imagedata, $path, $original) {
 		$tmp = explode(".", $original);
 		$extension = strtolower(end($tmp));
+		$files = array();
 		
 		if (!file_exists($path)) {
 			mkdir($path, 0777, true);
@@ -172,55 +166,65 @@ class Profile  implements JsonSerializable{
 	/**
 	* something describes this method
 	*
-	* @param int $userId The id of user
+	* @param int $profileId The id of profile
 	* @param string $firstName The first name of user
 	* @param string $lastName The last name of user
 	* @param string $alias The alias name as designer
 	* @param string $email The email of user
+	* @param string $about Something about me, the user
 	* @param file $file The foto upload of profile image
 	* @param string $imageData The imageData by json foto upload
 	*/		
-	public function doPost($userId, $firstName, $lastName, $alias, $email, $file, $imageData) {
+	public function doPost($profileId, $firstName, $lastName, $alias, $email, $about, $file, $imageData) {
 		$mysqli = $this->mysqli;
-		$profileId = 0;
-		$path = realpath(dirname(__FILE__).'/../../images/profile')."/";		
+		$id = 0;
+		$path = realpath(dirname(__FILE__).'/../../images/profiles')."/";		
 		
-		// in case of changing firstname and lastname deleting old photo
 		$fileName = "";
-		$sql = sprintf("SELECT id, photo FROM profile WHERE id = %d", $userId);
+		$sql = sprintf("SELECT id, photo FROM profile WHERE id = %d", $profileId);
 		if ($result = $mysqli->query($sql)) {
 			if ($row = $result->fetch_assoc()) {
 				$fileName = trim($row["photo"]);
-				$profileId = intval($row["id"]);
-				if (is_file($path.$fileName)) {
-					unlink($path.$fileName);
-				}
+				$id = intval($row["id"]);
 			}
 		} else {
 			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
 		}				
 		
-		if ($profileId == 0) {
+		if ($id == 0) {
 			throw new Exception(sprintf("%s, %s", get_class($this), 'Not Found'), 404);			
 		}
 		
-		$files = $this->storeProfileImage($picture, $imageData, $path, $fileName);
+		$files = $this->storeProfileImage($file, $imageData, $path, $fileName);
 			
 		$photo = (count($files) > 0) ? reset($files) : "";
 		$firstName = $mysqli->real_escape_string($firstName);
 		$lastName= $mysqli->real_escape_string($lastName);
 		$alias = $mysqli->real_escape_string($alias);
 		$email = $mysqli->real_escape_string($email);
+		$about = $mysqli->real_escape_string($about);
 		
 		$sql = "UPDATE profile SET firstName='%s', lastName='%s', alias='%s', ";
-		$sql .= "email='%s', photo='%s' ";
-		$sql .= "WHERE userId=%d";
-		$sql = sprintf($sql, $firstName, $lastName, $alias, $email, $photo, $userId);
-		if ($mysqli->query($sql) === false) {
-				throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+		$sql .= "email='%s', about='%s' ";
+		$sql .= "WHERE id=%d";
+		$sql = sprintf($sql, $firstName, $lastName, $alias, $email, $about, $profileId);
+			
+		if (!empty($photo)) {
+			if (strlen($fileName) > 0 && is_file($path.$fileName)) {
+				unlink($path.$fileName);
+			}
+				
+			$sql = "UPDATE profile SET firstName='%s', lastName='%s', alias='%s', ";
+			$sql .= "email='%s', about='%s', photo='%s' ";
+			$sql .= "WHERE id=%d";
+			$sql = sprintf($sql, $firstName, $lastName, $alias, $email, $about, $photo, $profileId);
 		}
 		
-		echo json_encode($this, JSON_UNESCAPED_UNICODE);			
+		if ($mysqli->query($sql) === false) {
+			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+		}
+		
+		echo json_encode($this->getProfile($profileId), JSON_UNESCAPED_UNICODE);
 	}
 	
 	/**
@@ -231,14 +235,15 @@ class Profile  implements JsonSerializable{
 	public function doGet($userId) {
 		$mysqli = $this->mysqli;
 		$profileId = 0;
-		$path = realpath(dirname(__FILE__).'/../../images/profile')."/";		
+		$path = realpath(dirname(__FILE__).'/../../images/profiles')."/";		
 		$firstName = "";
 		$lastName = ""; 
 		$alias = ""; 
 		$email = "";
+		$about = "";
 		$fileName = "";
 		
-		$sql = sprintf("SELECT * FROM profile WHERE id = %d", $userId);
+		$sql = sprintf("SELECT * FROM profile WHERE userId = %d", $userId);
 		if ($result = $mysqli->query($sql)) {
 			if ($row = $result->fetch_assoc()) {
 				$profileId = intval($row["id"]);
@@ -246,6 +251,7 @@ class Profile  implements JsonSerializable{
 				$lastName = trim($row["lastName"]);
 				$alias = trim($row["alias"]);
 				$email = trim($row["email"]); 
+				$about = trim($row["about"]);
 				$fileName = trim($row["photo"]);
 			}
 		} else {
@@ -257,12 +263,56 @@ class Profile  implements JsonSerializable{
 		}
 
 		$obj = new \stdClass();
+		$obj->profileId = $profileId;
 		$obj->firstName = $firstName; 
 		$obj->lastName = $lastName; 
 		$obj->alias = $alias; 
 		$obj->email = $email;
+		$obj->about = $about;
 		$obj->imageData = $this->getPngDataFromFile($path, $fileName);
 		
 		echo json_encode($obj, JSON_UNESCAPED_UNICODE);			
-	}	
+	}
+	
+	private function getProfile($profileId) {
+		$mysqli = $this->mysqli;
+		$id = 0;
+		$path = realpath(dirname(__FILE__).'/../../images/profiles')."/";		
+		$firstName = "";
+		$lastName = ""; 
+		$alias = ""; 
+		$email = "";
+		$about = "";
+		$fileName = "";
+		
+		$sql = sprintf("SELECT * FROM profile WHERE id = %d", $profileId);
+		if ($result = $mysqli->query($sql)) {
+			if ($row = $result->fetch_assoc()) {
+				$id = intval($row["id"]);
+				$firstName = trim($row["firstName"]); 
+				$lastName = trim($row["lastName"]);
+				$alias = trim($row["alias"]);
+				$email = trim($row["email"]); 
+				$about = trim($row["about"]);
+				$fileName = trim($row["photo"]);
+			}
+		} else {
+			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+		}	
+		
+		if ($id == 0) {
+			throw new Exception(sprintf("%s, %s", get_class($this), 'Not Found'), 404);			
+		}
+
+		$obj = new \stdClass();
+		$obj->profileId = $profileId;
+		$obj->firstName = $firstName; 
+		$obj->lastName = $lastName; 
+		$obj->alias = $alias; 
+		$obj->email = $email;
+		$obj->about = $about;
+		$obj->imageData = $this->getPngDataFromFile($path, $fileName);
+		
+		return $obj;			
+	}
 }

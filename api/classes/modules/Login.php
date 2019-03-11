@@ -16,7 +16,7 @@ class Login implements JsonSerializable {
 	
 	public function jsonSerialize() {
 		return array(
-			'userId' => userId
+			'userId' => $this->userId
         );
     }
 	
@@ -28,7 +28,7 @@ class Login implements JsonSerializable {
 	/**
 	* something describes this method
 	*
-	* @param string $login The email or username set as login
+	* @param string $email The email or username set as login
 	* @param string $password The password
 	*/
 	public function doPost($email, $password) {
@@ -37,7 +37,7 @@ class Login implements JsonSerializable {
 		$email = strip_tags(stripcslashes(trim($email)));
 		$password = strip_tags(stripcslashes(trim($password)));
 
-		if (strlen($password) >= 8 && strlen($email) > 0 && isValidEmail($email)) {
+		if (strlen($password) >= 8 && strlen($email) > 0 && $this->isValidEmail($email)) {
 			$userId = $this->getUserId($mysqli, $email, $password);	
 		
 			if ($userId == 0) {
@@ -81,7 +81,7 @@ class Login implements JsonSerializable {
 				$sha256 = trim($row["password"]);
 				$salt = trim($row["salt"]);
 				
-				if (strcmp(hash_hmac("sha256", $sha256, $salt), $password) == 0) {
+				if (strcmp(hash_hmac("sha256", $password, $salt), $sha256) == 0) {
 					$userId = intval($row["userId"]);					
 				}
 			}

@@ -46,9 +46,16 @@ class Preview {
 			array_push($ids, 0);
 		}
 
-		$obj = $builder->previewAvatar($mysqli, $ids);
-		$obj->currency = $this->getCurrency($mysqli, end($ids));
+		$canvasId = $this->getCanvasId($mysqli, $ids);
+		
+		$data = $this->getCanvasData($mysqli, $canvasId) ;
+		$width = $data->width;
+		$height = $data->height;
+		$obj = $builder->previewAvatar($mysqli, $ids, $width, $height);
+		$obj->canvas = $data->name;		
+		$obj->currency = $data->currency;
 		$obj->fee = $this->getFee($mysqli, $ids);
+		$obj->hashtags = $this->getHashtags($mysqli, $canvasId);
 		
 		echo json_encode($obj, JSON_UNESCAPED_UNICODE);
 	}
@@ -93,11 +100,93 @@ class Preview {
 			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
 		}
 		
-		$obj = $builder->previewAvatar($mysqli, $ids);
-		$obj->currency = $this->getCurrency($mysqli, end($ids));
+		if (count($ids) == 0) {
+			array_push($ids, 0);
+		}
+		
+		$data = $this->getCanvasData($mysqli, $canvasId) ;
+		$width = $data->width;
+		$height = $data->height;
+		$obj = $builder->previewAvatar($mysqli, $ids, $width, $height);
+		$obj->canvas = $data->name;
+		$obj->currency = $data->currency;
 		$obj->fee = $this->getFee($mysqli, $ids);
+		$obj->hashtags = $this->getHashtags($mysqli, $canvasId);
 		
 		echo json_encode($obj, JSON_UNESCAPED_UNICODE);
+	}
+	
+	private function getCanvasData($mysqli, $canvasId) {
+		$data = array();
+		
+		$sql = "SELECT id, name, width, height, currency FROM canvas ";
+		$sql .= "WHERE canvas.id=%d;";
+		$sql = sprintf($sql, $canvasId);
+
+		if ($result = $mysqli->query($sql)) {
+			while ($row = $result->fetch_assoc()) {
+				array_push($data, $row);
+			}
+		} else {
+			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+		}
+		
+		if (empty($data)) {
+			throw new Exception(sprintf("%s, %s", get_class($this), 'Not Found'), 404);			
+		}	
+		
+		$obj = new \stdClass();
+		$obj->name = trim($data[0]["name"]);
+		$obj->width = intval($data[0]["width"]);
+		$obj->height = intval($data[0]["height"]);
+		$obj->currency = trim($data[0]["currency"]);
+		
+		return $obj;
+	}
+	
+	private function getHashtags($mysqli, $canvasId) {
+		$data = array();
+		
+		$sql = "SELECT id, hashtag FROM hashtag ";
+		$sql .= "WHERE canvasId=%d;";
+		$sql = sprintf($sql, $canvasId);
+
+		if ($result = $mysqli->query($sql)) {
+			while ($row = $result->fetch_assoc()) {
+				array_push($data, trim($row["hashtag"]));
+			}
+		} else {
+			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+		}
+		
+		return $data;
+	}
+	
+	private function getCanvasId($mysqli, $fileIds) {
+		$canvasId = 0;
+		
+		$sql = "SELECT canvas.id AS canvasId, canvas.name AS canvasName, ";
+		$sql .= "layer.name AS layerName, file.id AS fileId, ";
+		$sql .= "CONCAT(canvas.name,'_',canvas.id,'/',filename) AS fileName, file.ownerId ";
+		$sql .= "FROM file ";
+		$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
+		$sql .= "LEFT JOIN canvas ON (canvas.id = layer.canvasId) ";
+		$sql .= sprintf("WHERE file.id IN (%s) ", implode(",", $fileIds));
+		$sql .= "ORDER BY layer.position ";
+
+		if ($result = $mysqli->query($sql)) {
+			while ($row = $result->fetch_assoc()) {
+				$canvasId = intval($row["canvasId"]);
+				
+				if ($canvasId > 0) {
+					break;
+				}
+			}
+		} else {
+			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
+		}		
+		
+		return $canvasId;
 	}
 	
 	private function getFee($mysqli, $ids) {
@@ -113,23 +202,5 @@ class Preview {
 		}
 
 		return sprintf('%g', $fee);
-	}
-	
-	private function getCurrency($mysqli, $fileId) {
-		$currency = array();
-		$sql = "SELECT DISTINCT currency FROM canvas ";
-		$sql .= "LEFT JOIN layer ON (layer.canvasId = canvas.id) ";
-		$sql .= "LEFT JOIN file ON (file.layerId = layer.id) ";
-		$sql .= "WHERE file.id=%d;";
-		$sql = sprintf($sql, $fileId);
-		if ($result = $mysqli->query($sql)) {
-			while ($row = $result->fetch_assoc()) {
-				array_push($currency, trim($row["currency"]));
-			}
-		} else {
-			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
-		}
-
-		return end($currency);
 	}
 }

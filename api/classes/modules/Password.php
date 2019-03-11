@@ -71,7 +71,7 @@ class Password implements JsonSerializable{
 	* something describes this method
 	*
 	* @param string $email The email for receiving request token
-	* @param string $phone The phone number
+	* @param string $firstName The firstName of user
 	*/	
 	public function doPost($email, $firstName) {
 		$mysqli = $this->mysqli;

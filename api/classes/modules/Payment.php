@@ -20,7 +20,7 @@ require_once __DIR__.'/../common/PHPMailer/src/SMTP.php';
 * GET gives an overview about pending processes.
 * POST starts payment process.
 * PUT confirm payment process.
-* DEL deleted the current booking data in case of abort by user.
+* DELETE deleted the current booking data in case of abort by user.
 * 
 */
 class Payment {
@@ -158,7 +158,7 @@ class Payment {
 	* @param string $userId The id of current user	
 	* @param array $fileIds The id as array or comma separated list
 	*/		
-	public function doDel($userId, $fileIds) {
+	public function doDelete($userId, $fileIds) {
 		$mysqli = $this->mysqli;		
 		$ids = array();
 		

@@ -38,12 +38,16 @@ class AvatarBuilder {
 		imagecopymerge($image, $mask, 0, 0, 0, 0, $width, $height, 100);
 		imagecolortransparent($image, $white);
 		
+		return $this->png2string($image);
+	}
+	
+	private function png2string($image) {
 		ob_start();
 		imagepng($image);
 		$data = ob_get_contents();
 		ob_end_clean(); 
 		
-		return $data;
+		return $data;		
 	}
 	
 	private function defaultAvatar($seed='') {
@@ -103,10 +107,11 @@ class AvatarBuilder {
 		return $data;
 	}
 	
-	public function previewAvatar($mysqli, $fileIds) {
+	public function previewAvatar($mysqli, $fileIds, $width, $height) {
 		$data = array();
 		
-		$sql = "SELECT canvas.name as canvasName, layer.name as layerName, file.id as fileId, ";
+		$sql = "SELECT canvas.name as canvasName, ";
+		$sql .= "layer.name as layerName, file.id as fileId, ";
 		$sql .= "CONCAT(canvas.name,'_',canvas.id,'/',filename) AS fileName, file.ownerId ";
 		$sql .= "FROM file ";
 		$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
@@ -119,11 +124,11 @@ class AvatarBuilder {
 				array_push($data, $row);
 			}
 		} else {
-			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
 		}
 		
 		// create backgound
-		$avatar = imagecreatetruecolor(256, 256) or die("GD image create failed");
+		$avatar = imagecreatetruecolor($width, $height) or die("GD image create failed");
 		$white   = imagecolorallocate($avatar, 255, 255, 255);
 		imagefill($avatar,0,0,$white);
 
@@ -141,7 +146,7 @@ class AvatarBuilder {
 			$im = imagecreatefrompng($file);
 			if(!$im) die('Failed to load '.$file);
 			imageSaveAlpha($im, true);
-			imagecopy($avatar,$im,0,0,0,0,256,256);
+			imagecopy($avatar, $im, 0, 0, 0, 0, $width, $height);
 			imagedestroy($im);
 		}
 		
@@ -176,11 +181,14 @@ class AvatarBuilder {
 			}
 		}
 		
-		$source = $this->prepareBackground($avatar);
+		//$source = $this->prepareBackground($avatar);
+		$source = $this->png2string($avatar);
 		
 		$data = new \stdClass;
 		$data->canvas = ucfirst($canvas);		
 		$data->parts = $parts;
+		$data->width = $width;
+		$data->height = $height;
 		$data->imageData = sprintf("data:image/png;base64,%s", base64_encode($source));
 
 		return $data;

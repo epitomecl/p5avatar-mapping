@@ -38,7 +38,7 @@ use modules\Preview as Preview;
 if (isset($_SERVER['HTTP_ORIGIN'])) {
     header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
     header('Access-Control-Allow-Credentials: true');    
-    header("Access-Control-Allow-Methods: GET, POST, PUT, DEL, OPTIONS"); 
+    header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS"); 
 }   
 // Access-Control headers are received during OPTIONS requests
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
@@ -68,6 +68,16 @@ function getParam($array, $param, $label = '') {
 
 $module = getParam($_POST, "module");
 $httpMethod = $_SERVER["REQUEST_METHOD"];
+
+if ($httpMethod == 'POST' && array_key_exists('NGINX', $_POST)) {
+    if ($_POST['NGINX'] == 'DELETE') {
+        $httpMethod = 'DELETE';
+    } else if ($_POST['NGINX'] == 'PUT') {
+        $httpMethod = 'PUT';
+    } else {
+        throw new Exception("Unexpected Header");
+    }
+}
 
 if (empty($module)) {
 	$module = getParam($_GET, "module");
@@ -251,10 +261,10 @@ try {
 				$userId = getParam($_PUT, "userId", "int");
 				$fileIds = getParam($_PUT, "fileIds", "array"); 
 				$payment->doPut($userId, $fileIds);				
-			}  elseif ($httpMethod == "DEL") {
-				$userId = getParam($_DEL, "userId", "int");
-				$fileIds = getParam($_DEL, "fileIds", "array");
-				$payment->doDel($userId, $fileIds);		
+			}  elseif ($httpMethod == "DELETE") {
+				$userId = getParam($_POST, "userId", "int");
+				$fileIds = getParam($_POST, "fileIds", "array");
+				$payment->doDelete($userId, $fileIds);		
 			} else {
 				$userId = getParam($_GET, "userId", "int");
 				$fileIds = getParam($_GET, "fileIds", "array");
@@ -285,14 +295,15 @@ try {
 		case "PROFILE":
 			$profile = new Profile($mysqli);
 			if ($httpMethod == "POST") {
-				$userId = intval(getParam($_POST, "userId")); 
+				$profileId = intval(getParam($_POST, "profileId")); 
 				$firstName = getParam($_POST, "firstName");
 				$lastName = getParam($_POST, "lastName");
 				$alias = getParam($_POST, "alias");
 				$email = getParam($_POST, "email");
-				$file = $_FILES["file"];
+				$about = getParam($_POST, "about");				
+				$file = isset($_FILES["file"]) ? $_FILES["file"] : array();
 				$imageData = getParam($_POST, "imageData");
-				$profile->doPost($userId, $firstName, $lastName, $alias, $email, $file, $imageData);
+				$profile->doPost($profileId, $firstName, $lastName, $alias, $email, $about, $file, $imageData);
 			} else {
 				$userId = intval(getParam($_GET, "userId")); 
 				$profile->doGet($userId);				
@@ -317,11 +328,16 @@ try {
 			(new Title())->doPost();
 			break;
 		case "UPLOAD":
-			$file = $_FILES["file"];
-			$layerId = getParam($_POST, "layerId", "int");
-			$divId = getParam($_POST, "divId");
-			$unlink = getParam($_POST, "unlink", "array");
-			(new FileUpload($mysqli, $path))->doPost($file, $layerId, $divId, $unlink);
+			$upload = new Upload($mysqli);
+			if ($httpMethod == "POST") {
+				$file = isset($_FILES["file"]) ? $_FILES["file"] : array();
+				$cardId = getParam($_POST, "cardId");
+				$layerId = getParam($_POST, "layerId", "int");
+				$upload->doPost($file, $cardId, $layerId);
+			} elseif ($httpMethod == "DELETE") {
+				$unlink = getParam($_POST, "unlink", "array");
+				$upload->doDelete($unlink);
+			}
 			break;
 		case "USERROLE":
 			$userRole = new UserRole($mysqli);

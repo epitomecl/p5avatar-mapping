@@ -221,7 +221,7 @@ POST Output:
 
 If user session is alive, start filtering for available canvases. 
 Searching for name, supports pagination, order by modified or simply returns current Top Five.
-Returns a list with names, expected currencies, sizes, file counter and canvas ids.
+Returns a list with names, offered currencies, file counter and canvas ids.
 
 POST Input:
 ```
@@ -382,7 +382,7 @@ POST Input:
 
 POST Output: 
 ```
-{"success":true}
+{layerId : layerId, name : name, position : position}
 ```
 
 PUT Input: 
@@ -490,7 +490,7 @@ These files are not selectable for an furter preview or booking process.
 GET gives an overview about pending processes.
 POST starts payment process.
 PUT confirm payment process.
-DEL deleted the current booking data in case of abort by user.
+DELETE deleted the current booking data in case of abort by user.
 
 POST Input:
 ```
@@ -522,12 +522,12 @@ GET Output:
 [{"fileId":22,"ownerId":1,"pending":1}, {"fileId":77,"ownerId":1,"pending":0}, ...]
 ```
 
-DEL Input:
+DELETE Input:
 ```
 {module : "payment", userId : userId, fileIds : fileIds }
 ```
 
-DEL Output: 
+DELETE Output: 
 ```
 {"success":true}
 ```
@@ -550,7 +550,7 @@ POST Input:
 
 POST Output: 
 ```
-{"address":"1Fvxg6UX11zDLdcaQdWakbbvpv375CFoJq","sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","currency":"EOS","fee":"0.000000000000000000","canvas":"cat","parts":{"background":1,"body":11,"fur":5,"eyes":8,"mouth":3,"accessorie":6},"imageData":"data:image\/png;base64,iVB..."}
+{"width":256,"height":256,"currency":"EOS","fee":"0.000000000000000000","canvas":"cat","parts":{"background":1,"body":11,"fur":5,"eyes":8,"mouth":3,"accessorie":6},"imageData":"data:image\/png;base64,iVB..."}
 ```
 
 GET Input:
@@ -560,7 +560,7 @@ GET Input:
 
 GET Output: 
 ```
-{"address":"1Fvxg6UX11zDLdcaQdWakbbvpv375CFoJq","sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","currency":"EOS","fee":"0.000000000000000000","canvas":"cat","parts":{"background":1,"body":11,"fur":5,"eyes":8,"mouth":3,"accessorie":6},"imageData":"data:image\/png;base64,iVB..."}
+{"width":256,"height":256,"currency":"EOS","fee":"0.000000000000000000","canvas":"cat","parts":{"background":1,"body":11,"fur":5,"eyes":8,"mouth":3,"accessorie":6},"imageData":"data:image\/png;base64,iVB..."}
 ```
 
 <p align="right"><a href="#current-available-modules">Top</a></p>
@@ -586,7 +586,7 @@ GET Input:
 
 GET Output: 
 ```
-{"fee":"0.000000000000000000","currency":"EOS"}
+{fileId:12,"fee":"0.000000000000000000","currency":"EOS"}
 ```
 
 <p align="right"><a href="#current-available-modules">Top</a></p>
@@ -670,17 +670,28 @@ POST Output:
 If user session is alive, files will be uploaded and transformed into png.
 User can upload multiple files. File is the browser file object. 
 LayerId directed to the layer name for combination of layer name and current number of layers as file name.
-DivId is the wrapping divider for the image in html template. Unlink is the file id for deleting unused file.
+Unlink is the file id for deleting unused file.
 If file is unlinked, it is not longer assigned.
+CardId stands for an elm id inside layout for holding uploaded image.
 
 POST Input:
 ```
-{module : "upload", file : file, layerId : layerId, divId : divId, unlink : unlink }
+{module : "upload", file : file, layerId : layerId, cardId : cardId }
 ```
 
 POST Output:
 ```
-[{"divId":1, "fileId":222, "fileName":"93B31277490D8E2C1E85D77EF4B516E7.png", "original":"fur03.png" : "assigned":true}]
+[{"fileId":222, "fileName":"93B31277490D8E2C1E85D77EF4B516E7.png", "original":"fur03.png" : "assigned":true}]
+```
+
+DELETE Input:
+```
+{module : "upload", unlink : unlink }
+```
+
+DELETE Output:
+```
+[{"fileId":222, "fileName":"93B31277490D8E2C1E85D77EF4B516E7.png", "original":"fur03.png" : "assigned":false}]
 ```
 
 <p align="right"><a href="#current-available-modules">Top</a></p>

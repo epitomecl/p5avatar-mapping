@@ -52,7 +52,7 @@ class Price implements JsonSerializable{
 		$mysqli = $this->mysqli;
 		$data = NULL;
 		
-		$sql = "SELECT fee, currency FROM file ";
+		$sql = "SELECT file.id AS fileId, fee, currency FROM file ";
 		$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
 		$sql .= "LEFT JOIN canvas ON (canvas.id = layer.canvasId) ";
 		$sql .= "WHERE file.id=%d;";
@@ -60,11 +60,12 @@ class Price implements JsonSerializable{
 		if ($result = $mysqli->query($sql)) {
 			if ($row = $result->fetch_assoc()) {
 				$data = new \stdClass;
+				$data->fileId = intval($row["fileId"]);
 				$data->fee = $row["fee"];
 				$data->currency = trim($row["currency"]);
 			}
 		} else {
-			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
 		}
 
 		if (empty($data)) {

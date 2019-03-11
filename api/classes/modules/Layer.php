@@ -36,19 +36,26 @@ class Layer  implements JsonSerializable{
 		$mysqli = $this->mysqli;
 		$name = strip_tags(stripcslashes(trim($name)));
 		
+		if ($layerId == 0) {
+			throw new Exception(sprintf("%s, %s", get_class($this), 'Not Found'), 404);
+		}
+			
 		if (strlen($name) > 0) {
 			$sql = "UPDATE layer SET name='%s', position=%d WHERE id=%d";
 			$sql = sprintf($sql, $name, $position, $layerId);
 			if ($mysqli->query($sql) === false) {
 				throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
 			}
-			if ($mysqli->affected_rows == 0 || $layerId == 0) {
-				throw new Exception(sprintf("%s, %s", get_class($this), 'Not Found'), 404);
-			}
 		} else {
 			throw new Exception(sprintf("%s, %s", get_class($this),  'Not Acceptable'), 406);
 		}
-		echo json_encode($this, JSON_UNESCAPED_UNICODE);		
+		
+		$data = new \stdClass;
+		$data->layerId = $layerId; 
+		$data->layerName = $name;
+		$data->position = $position;
+				
+		echo json_encode($data, JSON_UNESCAPED_UNICODE);		
 	}
 	
 	/**
@@ -91,7 +98,7 @@ class Layer  implements JsonSerializable{
 				$data = new \stdClass;
 				$data->id = intval($row["id"]);
 				$data->name = trim($row["name"]);
-				$data->position = intval($row["id"]);
+				$data->position = intval($row["position"]);
 				$data->fileIds = array();
 			}
 		} else {
