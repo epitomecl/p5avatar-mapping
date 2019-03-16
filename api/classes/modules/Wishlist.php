@@ -4,15 +4,13 @@ namespace modules;
 use \Exception as Exception;
 
 /**
-* Preparation for building an own avatar based on selected files. 
-* The user selected from each layer one file with its file id.
+* Fill up wishlist of favorite avatar based on selected files. 
+* The user selected an avatar and from each layer one file with its file id will automatically collected.
 * For instance 2, 22, 35, 56, 68, 77.
-* Based on order of layer the avatar will be build after payment.
-* Over the booking process selected files will be hold. 
-* These files are reserved.
+* Based on order of layer the avatar will be available as preview.
 * 
 */
-class Booking {
+class Wishlist {
 	private $mysqli;
 	
 	public function __construct($mysqli) {
@@ -45,34 +43,6 @@ class Booking {
 			array_push($ids, 0);
 		}
 
-		// cleanup file list owned by others and previous payment process
-		// $fileIds = array();
-		// $sql = "SELECT id, ownerId FROM file WHERE ownerId = 0 AND id IN (%d);";		
-		// $sql = sprintf($sql, implode(",", $ids));
-		// if ($result = $mysqli->query($sql)) {
-			// while ($row = $result->fetch_assoc()) {
-				// array_push($fileIds, intval($row["id"]));
-			// }
-		// } else {
-			// throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
-		// }
-		// $ids = unserialize(serialize($fileIds));
-		
-		// $found = 0;
-		// $sql = "SELECT COUNT(*) AS counter FROM user_booking WHERE fileId IN (%d);";		
-		// $sql = sprintf($sql, implode(",", $ids));
-		// if ($result = $mysqli->query($sql)) {
-			// if ($row = $result->fetch_assoc()) {
-				// $found = intval($row["counter"]);
-			// }
-		// } else {
-			// throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
-		// }
-		
-		// if ($found == count($ids)) {
-			// throw new Exception(sprintf("%s, %s", get_class($this), $sql.'Not Acceptable'), 406);
-		// }
-		
 		$searchId = 0;
 		$sql = "SELECT id AS userId FROM user WHERE id=%d;";		
 		$sql = sprintf($sql, $userId);
@@ -81,27 +51,27 @@ class Booking {
 				$searchId = intval($row["userId"]);
 			}
 		} else {
-			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
+			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
 		}
 		
 		if ($searchId == 0) {
 			throw new Exception(sprintf("%s, %s", get_class($this), 'Not Found'), 404);
 		}
-			
+		
 		if (count($ids) > 0) {
-			$bookingId = 0;
-			$sql = "INSERT INTO booking SET userId=%d, modified=NOW()";
+			$wishlistId = 0;
+			$sql = "INSERT INTO wishlist SET userId=%d, modified=NOW()";
 			$sql = sprintf($sql, $userId);
 			if ($mysqli->query($sql) === false) {
 				throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
 			} else {
-				$bookingId = $mysqli->insert_id;
+				$wishlistId = $mysqli->insert_id;
 			}			
 			
 			foreach ($ids as $index => $fileId) {
-				if ($fileId > 0 && $bookingId > 0) {
-					$sql = "INSERT INTO booking_file SET bookingId=%d, fileId=%d, modified=NOW()";
-					$sql = sprintf($sql, $bookingId, $fileId);
+				if ($fileId > 0 && $wishlistId > 0) {
+					$sql = "INSERT INTO wishlist_file SET wishlistId=%d, fileId=%d, modified=NOW()";
+					$sql = sprintf($sql, $wishlistId, $fileId);
 					if ($mysqli->query($sql) === false) {
 						throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
 					}
@@ -121,26 +91,26 @@ class Booking {
 		$mysqli = $this->mysqli;		
 		$data = array();
 		
-		$bookingIds = array();
-		$sql = "SELECT id FROM booking WHERE userId=%d;";		
+		$wishlistIds = array();
+		$sql = "SELECT id FROM wishlist WHERE userId=%d;";		
 		$sql = sprintf($sql, $userId);
 		if ($result = $mysqli->query($sql)) {
 			while ($row = $result->fetch_assoc()) {
-				array_push($bookingIds, intval($row["id"]));
+				array_push($wishlistIds, intval($row["id"]));
 			}
 		} else {
 			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
 		}
 		
-		foreach ($bookingIds as $index => $bookingId) {
+		foreach ($wishlistIds as $index => $wishlistId) {
 			$fileIds = array();
-			$sql = "SELECT bf.fileId, layer.position FROM booking_file bf ";
-			$sql .= "LEFT JOIN booking ON (booking.id = bf.bookingId) ";			
-			$sql .= "LEFT JOIN file ON (file.id = bf.fileId) ";			
+			$sql = "SELECT wf.fileId, layer.position FROM wishlist_file wf ";
+			$sql .= "LEFT JOIN wishlist ON (wishlist.id = wf.wishlistId) ";
+			$sql .= "LEFT JOIN file ON (file.id = wf.fileId) ";			
 			$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
-			$sql .= "WHERE booking.userId=%d AND bf.bookingId=%d ";	
+			$sql .= "WHERE wishlist.userId=%d AND wf.wishlistId=%d ";	
 			$sql .= "ORDER BY layer.position;";
-			$sql = sprintf($sql, $userId, $bookingId);
+			$sql = sprintf($sql, $userId, $wishlistId);
 
 			if ($result = $mysqli->query($sql)) {
 				while ($row = $result->fetch_assoc()) {
@@ -151,13 +121,13 @@ class Booking {
 			}
 			
 			$obj = new \stdClass();
-			$obj->id = $bookingId;
+			$obj->id = $wishlistId;
 			$obj->fileIds = $fileIds;
 			array_push($data, $obj);
 		}		
 		
 		$obj = new \stdClass();
-		$obj->booking = $data;
+		$obj->wishlist = $data;
 		
 		echo json_encode($obj, JSON_UNESCAPED_UNICODE);
 	}
@@ -166,34 +136,34 @@ class Booking {
 	* something describes this method
 	*
 	* @param int $userId The id of current user		
-	* @param int $bookingId The id of booking item
+	* @param int $wishlistId The id of wishlist item
 	*/	
-	public function doDelete($userId, $bookingId) {
+	public function doDelete($userId, $wishlistId) {
 		$mysqli = $this->mysqli;
-		$bookingIds = array();
+		$wishlistIds = array();
 		
-		$sql = "SELECT id FROM booking WHERE userId=%d;";	
+		$sql = "SELECT id FROM wishlist WHERE userId=%d;";	
 		$sql = sprintf($sql, $userId);
 		if ($result = $mysqli->query($sql)) {
 			while ($row = $result->fetch_assoc()) {
-				array_push($bookingIds, intval($row["id"]));
+				array_push($wishlistIds, intval($row["id"]));
 			}
 		} else {
 			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
 		}
 		
-		$sql = "DELETE FROM booking_file WHERE bookingId IN (%s) AND bookingId=%d;";
-		$sql = sprintf($sql, implode(",", $bookingIds), $bookingId);
+		$sql = "DELETE FROM wishlist_file WHERE wishlistId IN (%s) AND wishlistId=%d;";
+		$sql = sprintf($sql, implode(",", $wishlistIds), $wishlistId);
 		if ($mysqli->query($sql) === false) {
 			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
 		}
 		
-		$sql = "DELETE FROM booking WHERE userId=%d AND id=%d;";
-		$sql = sprintf($sql, $userId, $bookingId);
+		$sql = "DELETE FROM wishlist WHERE userId=%d AND id=%d;";
+		$sql = sprintf($sql, $userId, $wishlistId);
 		if ($mysqli->query($sql) === false) {
 			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
 		}
-		
+				
 		$this->doGet($userId);
-	}	
+	}
 }

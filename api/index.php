@@ -32,6 +32,7 @@ use modules\Title as Title;
 use modules\Upload as Upload;
 use modules\UserRole as UserRole;
 use modules\WhoIsOnline as WhoIsOnline;
+use modules\Wishlist as Wishlist;
 use modules\Preview as Preview;
 
 // Allow CORS
@@ -74,8 +75,6 @@ if ($httpMethod == 'POST' && array_key_exists('NGINX', $_POST)) {
         $httpMethod = 'DELETE';
     } else if ($_POST['NGINX'] == 'PUT') {
         $httpMethod = 'PUT';
-    } else {
-        throw new Exception("Unexpected Header");
     }
 }
 
@@ -138,9 +137,19 @@ try {
 			}
 			break;
 		case "BOOKING":
-			$userId = getParam($_POST, "userId");
-			$fileIds = getParam($_POST, "fileIds", "array"); 
-			(new Booking($mysqli))->doPost($userId, $fileIds);
+			$booking = new Booking($mysqli);
+			if ($httpMethod == "POST") {
+				$userId = getParam($_POST, "userId");
+				$fileIds = getParam($_POST, "fileIds", "array"); 
+				$booking->doPost($userId, $fileIds);
+			} elseif ($httpMethod == "DELETE") {
+				$userId = getParam($_POST, "userId", "int");
+				$bookingId = getParam($_POST, "bookingId", "int");
+				$booking->doDelete($userId, $bookingId);
+			} else {
+				$userId = getParam($_GET, "userId", "int");
+				$booking->doGet($userId);				
+			}
 			break;			
 		case "CANVAS":
 			$canvas = new Canvas($mysqli);
@@ -217,9 +226,9 @@ try {
 				$position = getParam($_POST, "position", "int");
 				$layer->doPost($layerId, $name, $position);
 			} elseif ($httpMethod == "PUT") {
-				$canvasId = getParam($_PUT, "canvasId", "int");
-				$name = getParam($_PUT, "name");
-				$position = getParam($_PUT, "position", "int");
+				$canvasId = getParam($_POST, "canvasId", "int");
+				$name = getParam($_POST, "name");
+				$position = getParam($_POST, "position", "int");
 				$layer->doPut($canvasId, $name, $position);				
 			} else {
 				$layerId = getParam($_GET, "layerId", "int");	
@@ -242,9 +251,9 @@ try {
 				$email = getParam($_POST, "email");		
 				$phone = getParam($_POST, "phone");
 			} elseif ($httpMethod == "PUT") {
-				$token = getParam($_PUT, "token");		
-				$password = getParam($_PUT, "password");		
-				$password2 = getParam($_PUT, "password2");
+				$token = getParam($_POST, "token");		
+				$password = getParam($_POST, "password");		
+				$password2 = getParam($_POST, "password2");
 				$password->doPut($token, $password, $password2);
 			} else {
 				$token = getParam($_GET, "token");	
@@ -255,20 +264,18 @@ try {
 			$payment = new Payment($mysqli, $config);
 			if ($httpMethod == "POST") {		
 				$userId = getParam($_POST, "userId", "int");
-				$fileIds = getParam($_POST, "fileIds", "array"); 
-				$payment->doPost($userId, $fileIds);
+				$payment->doPost($userId);
 			} elseif ($httpMethod == "PUT") {
-				$userId = getParam($_PUT, "userId", "int");
-				$fileIds = getParam($_PUT, "fileIds", "array"); 
-				$payment->doPut($userId, $fileIds);				
-			}  elseif ($httpMethod == "DELETE") {
 				$userId = getParam($_POST, "userId", "int");
-				$fileIds = getParam($_POST, "fileIds", "array");
-				$payment->doDelete($userId, $fileIds);		
+				$bookingId = getParam($_POST, "bookingId", "array"); 
+				$payment->doPut($userId, $bookingId);				
+			} elseif ($httpMethod == "DELETE") {
+				$userId = getParam($_POST, "userId", "int");
+				$bookingId = getParam($_POST, "bookingId", "array");
+				$payment->doDelete($userId, $bookingId);		
 			} else {
 				$userId = getParam($_GET, "userId", "int");
-				$fileIds = getParam($_GET, "fileIds", "array");
-				$payment->doGet($userId, $fileIds);					
+				$payment->doGet($userId);					
 			}
 			break;			
 		case "PREVIEW":
@@ -351,6 +358,21 @@ try {
 		case "WHOISONLINE":
 			(new WhoIsOnline($mysqli))->doPost();
 			break;
+		case "WISHLIST":
+			$wishlist = new Wishlist($mysqli);
+			if ($httpMethod == "POST") {		
+				$userId = getParam($_POST, "userId", "int");
+				$fileIds = getParam($_POST, "fileIds", "array"); 
+				$wishlist->doPost($userId, $fileIds);
+			} elseif ($httpMethod == "DELETE") {
+				$userId = getParam($_POST, "userId", "int");
+				$wishlistId = getParam($_POST, "wishlistId", "int");					
+				$wishlist->doDelete($userId, $wishlistId);		
+			} else {
+				$userId = getParam($_GET, "userId", "int");
+				$wishlist->doGet($userId);					
+			}
+			break;				
 		default:
 			(new TestFormular())->execute($module);
 			break;		

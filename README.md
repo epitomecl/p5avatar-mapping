@@ -75,8 +75,8 @@ https://api.avarkey.com/api/
 |:wink: [CANVAS](#canvas)	|:wink: [PASSWORD](#password)|									|
 |:wink: [CANVASES](#canvases)|							|									|
 |:rage: [CLOSE](#close)		|:wink: [PAYMENT](#payment)	|									|
-|:wink: [CREATE](#create)	|:wink: [PREVIEW](#preview)	|									|
-|:wink: [CURRENCY](#currency)|:wink: [PRICE](#price)	|:eyes: [WHOISONLINE](#whoisonline)	|
+|:wink: [CREATE](#create)	|:wink: [PREVIEW](#preview)	|:eyes: [WHOISONLINE](#whoisonline)	|
+|:wink: [CURRENCY](#currency)|:wink: [PRICE](#price)	|:eyes: [WISHLIST](#wishlist)		|
 		
 
 ## ADDRESS
@@ -185,8 +185,8 @@ Preparation for building an own avatar based on selected files.
 The user selected from each layer one file with its file id.
 For instance 2, 22, 35, 56, 68, 77.
 Based on order of layer the avatar will be build after payment.
-Over the booking process selected files will be hold. These files
-are reserved and not selectable for an furter booking process.
+Over the booking process selected files will be hold. 
+These files are reserved.
 
 POST Input: 
 ```
@@ -195,7 +195,27 @@ POST Input:
 
 POST Output: 
 ```
-{"success":true}
+{"booking":[[22,35,68,56,77,2]]}
+```
+
+GET Input: 
+```
+{module : "booking", userId : userId}
+```
+
+GET Output: 
+```
+{"booking":[[22,35,68,56,77,2],....]}
+```
+
+DELETE Input: 
+```
+{module : "booking", userId : userId, position : position}
+```
+
+DELETE Output: 
+```
+{"booking":[[22,35,68,56,77,2],....]}
 ```
 
 <p align="right"><a href="#current-available-modules">Top</a></p>
@@ -494,7 +514,7 @@ DELETE deleted the current booking data in case of abort by user.
 
 POST Input:
 ```
-{module : "payment", userId : userId, fileIds : fileIds }
+{module : "payment", userId : userId }
 ```
 
 POST Output: 
@@ -504,7 +524,7 @@ POST Output:
 
 PUT Input:
 ```
-{module : "payment", userId : userId, fileIds : fileIds, address : address }
+{module : "payment", userId : userId, bookingId : bookingId, address : address }
 ```
 
 PUT Output: 
@@ -514,7 +534,7 @@ PUT Output:
 
 GET Input:
 ```
-{module : "payment", userId : userId, fileIds : fileIds }
+{module : "payment", userId : userId }
 ```
 
 GET Output: 
@@ -524,7 +544,7 @@ GET Output:
 
 DELETE Input:
 ```
-{module : "payment", userId : userId, fileIds : fileIds }
+{module : "payment", userId : userId, bookingId : bookingId }
 ```
 
 DELETE Output: 
@@ -739,6 +759,45 @@ POST Input:
 POST Output: 
 ```
 {"counter":15770,"ip":"61.98.24.84"}
+```
+
+<p align="right"><a href="#current-available-modules">Top</a></p>
+
+## WISHLIST
+
+Fill up wishlist of favorite avatar based on selected files. 
+The user selected an avatar and from each layer one file with its file id will automatically collected.
+For instance 2, 22, 35, 56, 68, 77.
+Based on order of layer the avatar will be available as preview.
+
+POST Input: 
+```
+{module : "wishlist", userId : userId, fileIds : fileIds}
+```
+
+POST Output: 
+```
+{"wishlist":[[22,35,68,56,77,2]]}
+```
+
+GET Input: 
+```
+{module : "wishlist", userId : userId}
+```
+
+GET Output: 
+```
+{"wishlist":[[22,35,68,56,77,2],....]}
+```
+
+DELETE Input: 
+```
+{module : "wishlist", userId : userId, position : position}
+```
+
+DELETE Output: 
+```
+{"wishlist":[[22,35,68,56,77,2],....]}
 ```
 
 <p align="right"><a href="#current-available-modules">Top</a></p>

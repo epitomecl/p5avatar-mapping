@@ -55,6 +55,7 @@ class Preview {
 		$obj->canvas = $data->name;		
 		$obj->currency = $data->currency;
 		$obj->fee = $this->getFee($mysqli, $ids);
+		$obj->fileIds = $ids;
 		$obj->hashtags = $this->getHashtags($mysqli, $canvasId);
 		
 		echo json_encode($obj, JSON_UNESCAPED_UNICODE);
@@ -111,6 +112,7 @@ class Preview {
 		$obj->canvas = $data->name;
 		$obj->currency = $data->currency;
 		$obj->fee = $this->getFee($mysqli, $ids);
+		$obj->fileIds = $ids;
 		$obj->hashtags = $this->getHashtags($mysqli, $canvasId);
 		
 		echo json_encode($obj, JSON_UNESCAPED_UNICODE);
@@ -167,7 +169,7 @@ class Preview {
 		
 		$sql = "SELECT canvas.id AS canvasId, canvas.name AS canvasName, ";
 		$sql .= "layer.name AS layerName, file.id AS fileId, ";
-		$sql .= "CONCAT(canvas.name,'_',canvas.id,'/',filename) AS fileName, file.ownerId ";
+		$sql .= "CONCAT(canvas.name,'_',canvas.id,'/',filename) AS fileName ";
 		$sql .= "FROM file ";
 		$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
 		$sql .= "LEFT JOIN canvas ON (canvas.id = layer.canvasId) ";

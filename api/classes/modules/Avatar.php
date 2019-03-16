@@ -37,7 +37,7 @@ class Avatar {
 		$path = realpath(dirname(__FILE__).'/../../images/avatars')."/";
 		$address = strip_tags(stripcslashes(trim($address)));
 		$fileName = "";
-		$sql = sprintf("SELECT filename FROM user_avatar WHERE address = '%s'", $address);
+		$sql = sprintf("SELECT filename FROM avatar WHERE address = '%s'", $address);
 		if ($result = $mysqli->query($sql)) {
 			if ($row = $result->fetch_assoc()) {
 				$fileName = trim($row["filename"]);

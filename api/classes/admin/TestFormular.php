@@ -11,6 +11,7 @@ class TestFormular {
 	
 	public function execute($module) {
 		$modules = $this->getModules($module);
+		$methods = array("GET" => "GET", "POST" => "POST", "PUT" => "POST", "DELETE" => "POST");
 		
 		require_once("view/TestFormularView.php"); 
 	}

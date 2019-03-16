@@ -44,45 +44,40 @@ class Payment {
 	/**
 	* something describes this method
 	*
-	* @param string $userId The id of current user	
-	* @param array $fileIds The id as array or comma separated list
+	* @param int $userId The id of current user	
 	*/		
-	public function doPost($userId, $fileIds) {
+	public function doPost($userId) {
 		$mysqli = $this->mysqli;		
-		$ids = array();
-		
-		// check all variants of given ids as array or comma separated list or both
-		if (is_array($fileIds)) {
-			foreach ($fileIds as $index => $id) {
-				$ids = array_merge($ids, explode(",", $id));
+
+		$bookingIds = array();
+		$sql = "SELECT id FROM booking WHERE userId=%d;";		
+		$sql = sprintf($sql, $userId);
+		if ($result = $mysqli->query($sql)) {
+			while ($row = $result->fetch_assoc()) {
+				array_push($bookingIds, intval($row["id"]));
 			}
 		} else {
-			$ids = array_merge($ids, explode(",", $fileIds));
-		}
-		
-		// remove empty items
-		$ids = array_filter($ids);
-		
-		if (count($ids) == 0) {
-			array_push($ids, 0);
+			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
 		}
 		
 		$data = array();
-		$sql = "SELECT id, fileId, fee, currency FROM user_booking ";
-		$sql .= "LEFT JOIN file ON (file.id = user_booking.fileId) ";
-		$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
-		$sql .= "LEFT JOIN canvas ON (canvas.id = layer.canvasId) ";
-		$sql .= "WHERE user_booking.fileId IN (%d);";
-		$sql .= "AND user_booking.userId=%d;";
-		sprintf($sql, implode(",", $ids), $userId);
-		if ($result = $mysqli->query($sql)) {
-			if ($row = $result->fetch_assoc()) {
-				array_push($data, $row);
+		foreach ($bookingIds as $index => $bookingId) {		
+			$sql = "SELECT booking_file.id, booking_file.fileId, fee, currency FROM booking_file ";
+			$sql .= "LEFT JOIN booking ON (booking.id = booking_file.bookingId) ";		
+			$sql .= "LEFT JOIN file ON (file.id = booking_file.fileId) ";
+			$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
+			$sql .= "LEFT JOIN canvas ON (canvas.id = layer.canvasId) ";
+			$sql .= "WHERE booking.userId=%d AND booking_file.bookingId=%d ";	
+			$sql .= "ORDER BY layer.position;";
+			$sql = sprintf($sql, $userId, $bookingId);
+			if ($result = $mysqli->query($sql)) {
+				if ($row = $result->fetch_assoc()) {
+					array_push($data, $row);
+				}
+			} else {
+				throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
 			}
-		} else {
-			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
 		}
-		
 		// todo something with data
 		
 		echo json_encode($this, JSON_UNESCAPED_UNICODE);
@@ -91,46 +86,33 @@ class Payment {
 	/**
 	* something describes this method
 	*
-	* @param string $userId The id of current user	
-	* @param array $fileIds The id as array or comma separated list
+	* @param int $userId The id of current user	
+	* @param int $bookingId The id of booking
 	* @param string $address The address of a wallet		
 	*/		
-	public function doPut($userId, $fileIds, $address) {
+	public function doPut($userId, $bookingId, $address) {
 		$mysqli = $this->mysqli;		
-		$ids = array();
 		
-		// check all variants of given ids as array or comma separated list or both
-		if (is_array($fileIds)) {
-			foreach ($fileIds as $index => $id) {
-				$ids = array_merge($ids, explode(",", $id));
+		$ids = array();
+		$sql = "SELECT booking_file.id, booking_file.fileId, fee, currency FROM booking_file ";
+		$sql .= "LEFT JOIN booking ON (booking.id = booking_file.bookingId) ";		
+		$sql .= "LEFT JOIN file ON (file.id = booking_file.fileId) ";
+		$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
+		$sql .= "LEFT JOIN canvas ON (canvas.id = layer.canvasId) ";
+		$sql .= "WHERE booking.userId=%d AND booking_file.bookingId=%d ";	
+		$sql .= "ORDER BY layer.position;";
+		$sql = sprintf($sql, $userId, $bookingId);
+		if ($result = $mysqli->query($sql)) {
+			if ($row = $result->fetch_assoc()) {
+				array_push($ids, intval($row["fileId"]));
 			}
 		} else {
-			$ids = array_merge($ids, explode(",", $fileIds));
-		}
-		
-		// remove empty items
-		$ids = array_filter($ids);
-		
-		if (count($ids) == 0) {
-			array_push($ids, 0);
-		}
-		
-		foreach ($ids as $index => $fileId) {
-			$sql = "UPDATE file SET ownerId=%d WHERE fileId=%d;";
-			$sql = sprintf($sql, $userId, $fileId, $modified);
-			if ($mysqli->query($sql) === false) {
-				throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
-			}		
-		}
-
-		$sql = "DELETE FROM user_booking WHERE userId='%s' AND fileId IN (%s);";
-		$sql = sprintf($sql, $userId, implode(",", $ids));
-		if ($mysqli->query($sql) === false) {
 			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
 		}		
+		$this->removeBooking($mysqli, $userId, $bookingId);
 
 		$builder = new AvatarBuilder();
-		$image = $builder->getAvatarImageSource($mysqli, $fileIds);
+		$image = $builder->getAvatarImageSource($mysqli, $ids);
 		$path = realpath(dirname(__FILE__).'/../../images/avatars')."/";
 		$fileName = sprintf("%s.%s", md5($userId.time()), "png");
 
@@ -142,11 +124,25 @@ class Payment {
 		imagedestroy($image);
 
 		if (file_exists($path.$fileName)) {
-			$sql = "INSERT INTO user_avatar SET userId=%d, filename='%s', address='%s', modified=NOW();";
-			$sql = sprintf($sql, $userId, $fileId, $address);
+			$avatarId = 0;
+			$sql = "INSERT INTO avatar SET userId=%d, address='%s', filename='%s', modified=NOW()";
+			$sql = sprintf($sql, $userId, $address, $fileName);
 			if ($mysqli->query($sql) === false) {
 				throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+			} else {
+				$avatarId = $mysqli->insert_id;
 			}			
+			
+			foreach ($ids as $index => $fileId) {
+				if ($fileId > 0 && $avatarId > 0) {
+					$sql = "INSERT INTO avatar_file SET avatarId=%d, fileId=%d, modified=NOW();";
+					$sql = sprintf($sql, $avatarId, $fileId);
+					if ($mysqli->query($sql) === false) {
+						throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+					}
+				}
+			}
+			
 		}
 		
 		echo json_encode($this, JSON_UNESCAPED_UNICODE);
@@ -155,34 +151,13 @@ class Payment {
 	/**
 	* something describes this method
 	*
-	* @param string $userId The id of current user	
-	* @param array $fileIds The id as array or comma separated list
+	* @param int $userId The id of current user	
+	* @param int $bookingId The id of booking
 	*/		
-	public function doDelete($userId, $fileIds) {
-		$mysqli = $this->mysqli;		
-		$ids = array();
+	public function doDelete($userId, $bookingId) {
+		$mysqli = $this->mysqli;	
 		
-		// check all variants of given ids as array or comma separated list or both
-		if (is_array($fileIds)) {
-			foreach ($fileIds as $index => $id) {
-				$ids = array_merge($ids, explode(",", $id));
-			}
-		} else {
-			$ids = array_merge($ids, explode(",", $fileIds));
-		}
-		
-		// remove empty items
-		$ids = array_filter($ids);
-		
-		if (count($ids) == 0) {
-			array_push($ids, 0);
-		}
-		
-		$sql = "DELETE FROM user_booking WHERE userId='%s' AND fileId IN (%s);";
-		$sql = sprintf($sql, $userId, implode(",", $ids));
-		if ($mysqli->query($sql) === false) {
-			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
-		}
+		$this->removeBooking($mysqli, $userId, $bookingId);
 		
 		echo json_encode($this, JSON_UNESCAPED_UNICODE);		
 	}
@@ -190,58 +165,54 @@ class Payment {
 	/**
 	* something describes this method
 	*
-	* @param string $userId The id of current user	
-	* @param array $fileIds The id as array or comma separated list
+	* @param int $userId The id of current user	
 	*/		
-	public function doGet($userId, $fileIds) {
-		$mysqli = $this->mysqli;		
-		$ids = array();
+	public function doGet($userId) {
+		$mysqli = $this->mysqli;	
 		
-		// check all variants of given ids as array or comma separated list or both
-		if (is_array($fileIds)) {
-			foreach ($fileIds as $index => $id) {
-				$ids = array_merge($ids, explode(",", $id));
-			}
-		} else {
-			$ids = array_merge($ids, explode(",", $fileIds));
-		}
-		
-		// remove empty items
-		$ids = array_filter($ids);
-		
-		if (count($ids) == 0) {
-			array_push($ids, 0);
-		}
-		
-		$data = array();
-		$sql = "SELECT id, userId, filename, orginal, ";
-		$sql .= "CONCAT(canvas.name,'_',canvas.id,'/') AS canvasName FROM file ";
-		$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";		
-		$sql .= "LEFT JOIN canvas ON (canvas.id = layer.canvasId) ";
-		$sql .= "WHERE ownerId=%d AND file.id IN (%d);";		
-		$sql = sprintf($sql, $userId, implode(",", $ids));
+		$bookingIds = array();
+		$sql = "SELECT id FROM booking WHERE userId=%d;";		
+		$sql = sprintf($sql, $userId);
 		if ($result = $mysqli->query($sql)) {
-			if ($row = $result->fetch_assoc()) {
-				$data[$row["id"]] = $row;
+			while ($row = $result->fetch_assoc()) {
+				array_push($bookingIds, intval($row["id"]));
 			}
 		} else {
-			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
 		}
 		
-		$status = array();
-		foreach ($ids as $index => $fileId) {
-			$obj = new \stdClass();
-			$obj->fileId = $fileId;
-			$obj->ownerId = 0;
-			$obj->pending = 1;
-			if (array_key_exists($fileId, $data)) {
-				$obj->ownerId = intval($data["onwerId"]);
-				$obj->pending = 0;
+		$price = array();
+		foreach ($bookingIds as $index => $bookingId) {		
+			$sql = "SELECT booking_file.id, booking_file.fileId, fee, currency FROM booking_file ";
+			$sql .= "LEFT JOIN booking ON (booking.id = booking_file.bookingId) ";		
+			$sql .= "LEFT JOIN file ON (file.id = booking_file.fileId) ";
+			$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
+			$sql .= "LEFT JOIN canvas ON (canvas.id = layer.canvasId) ";
+			$sql .= "WHERE booking.userId=%d AND booking_file.bookingId=%d ";	
+			$sql .= "ORDER BY layer.position;";
+			$sql = sprintf($sql, $userId, $bookingId);
+			if ($result = $mysqli->query($sql)) {
+				if ($row = $result->fetch_assoc()) {
+					$currency = trim($row["currency"]);
+					$fee = $row["fee"];
+					
+					if (array_key_exists($currency, $price)) {
+						$price[$currency] = $price[$currency] + $fee;
+					} else {
+						$price[$currency] = $fee;						
+					}
+				}
+			} else {
+				throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
 			}
-			array_push($status, $obj);
 		}
 		
-		echo json_encode($status, JSON_UNESCAPED_UNICODE);		
+		
+		$obj = new \stdClass();
+		$obj->counter = count($bookingIds);
+		$obj->price = $this->getObjectPrice($price);
+		
+		echo json_encode($obj, JSON_UNESCAPED_UNICODE);		
 	}
 	
 	private function sendEmail($email, $address) {
@@ -300,6 +271,46 @@ class Payment {
 			
 			throw new Exception($e->getMessage(), 406);
 		}
+	}
+
+	private function removeBooking($mysqli, $userId, $bookingId) {
+		$bookingIds = array();
+		
+		$sql = "SELECT id FROM booking WHERE userId=%d;";	
+		$sql = sprintf($sql, $userId);
+		if ($result = $mysqli->query($sql)) {
+			while ($row = $result->fetch_assoc()) {
+				array_push($bookingIds, intval($row["id"]));
+			}
+		} else {
+			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
+		}
+		
+		$sql = "DELETE FROM booking_file WHERE bookingId IN (%s) AND bookingId=%d;";
+		$sql = sprintf($sql, implode(",", $bookingIds), $bookingId);
+		if ($mysqli->query($sql) === false) {
+			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
+		}
+		
+		$sql = "DELETE FROM booking WHERE userId=%d AND id=%d;";
+		$sql = sprintf($sql, $userId, $bookingId);
+		if ($mysqli->query($sql) === false) {
+			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
+		}
+	}
+	
+	private function getObjectPrice($price) {
+		$data = array();
+		
+		foreach ($price as $key => $value) {
+			$obj = new \stdClass();
+			$obj->currency = $key;
+			$obj->fee = $value;
+			
+			array_push($data, $obj);
+		}
+		
+		return $data;
 	}
 	
 	private function cleanup($labels, $body) {

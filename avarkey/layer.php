@@ -317,7 +317,7 @@ $('div.container.images').on('click', 'button.remove', function() {
 	var card = $(this).closest("div.card.image");
 	var fileId = card.find("img").prop('id').replace("fileId_", "");
 	
-	if (confirm('Are you sure deleting this image?' + fileId)) {
+	if (confirm('Are you sure deleting this image?')) {
 		deleteFile(new Array(fileId));
 	}
 });

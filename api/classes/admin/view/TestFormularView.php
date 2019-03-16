@@ -30,7 +30,8 @@
 				<?php echo $data->description; ?>
 			</p>
 			<?php foreach ($data->blocks as $key => $params) { ?>
-			<form method="<?php echo $key; ?>" action="<?php echo $_SERVER['PHP_SELF']; ?>" class="paramset <?php echo strtolower($data->name); ?>" <?php echo ((!$data->selected) ? "style=\"display:none;\"" : ""); ?>>
+			<form method="<?php echo $methods[$key]; ?>" action="<?php echo $_SERVER['PHP_SELF']; ?>" class="paramset <?php echo strtolower($data->name); ?>" <?php echo ((!$data->selected) ? "style=\"display:none;\"" : ""); ?>>
+				<input type="hidden" name="NGINX" value="<?php echo $key; ?>" />
 				<input type="hidden" name="module" value="<?php echo strtolower($data->name); ?>" />
 				<div class="card mb-3 border-info">
 					<div class="card-header"><?php echo $key; ?></div>

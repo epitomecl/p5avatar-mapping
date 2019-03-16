@@ -112,7 +112,7 @@ class AvatarBuilder {
 		
 		$sql = "SELECT canvas.name as canvasName, ";
 		$sql .= "layer.name as layerName, file.id as fileId, ";
-		$sql .= "CONCAT(canvas.name,'_',canvas.id,'/',filename) AS fileName, file.ownerId ";
+		$sql .= "CONCAT(canvas.name,'_',canvas.id,'/',filename) AS fileName ";
 		$sql .= "FROM file ";
 		$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
 		$sql .= "LEFT JOIN canvas ON (canvas.id = layer.canvasId) ";
@@ -150,36 +150,23 @@ class AvatarBuilder {
 			imagedestroy($im);
 		}
 		
-		$assigned = false;
-		$tc  = imagecolorallocate($avatar, 255, 0, 0);
-		foreach($data as $index => $row){
-			$ownerId = intval($row["ownerId"]);
-			$text = sprintf("N/A %d", $ownerId);
+	
 			
-			if (intval($row["ownerId"]) > 0) {
-				imagestring($avatar, 5, 5, 5, $text, $tc);
-				$assigned = true;
-				break;
-			}
-		}
-		
-		if (!$assigned) {
-			$sql = "SELECT id, userId, modified FROM user_booking WHERE fileId IN (%d);";		
-			$sql = sprintf($sql, implode(",", $fileIds));
-			if ($result = $mysqli->query($sql)) {
-				while ($row = $result->fetch_assoc()) {
-					$ownerId = intval($row["userId"]);
-					$text = sprintf("N/A %d", $ownerId);
+			// $sql = "SELECT fileId FROM booking_file WHERE fileId IN (%d);";		
+			// $sql = sprintf($sql, implode(",", $fileIds));
+			// if ($result = $mysqli->query($sql)) {
+				// while ($row = $result->fetch_assoc()) {
+					// $fileId = intval($row["fileId"]);
+					// $text = sprintf("N/A %d", $ownerId);
 				
-					if (intval($row["ownerId"]) > 0) {
-						imagestring($image, 5, 5, 5, $text, $tc);						
-						break;
-					}
-				}
-			} else {
-				throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
-			}
-		}
+					// if (intval($row["ownerId"]) > 0) {
+						// imagestring($avatar, 5, 5, 5, $text, $tc);						
+						// break;
+					// }
+				// }
+			// } else {
+				// throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+			// }
 		
 		//$source = $this->prepareBackground($avatar);
 		$source = $this->png2string($avatar);
@@ -198,7 +185,7 @@ class AvatarBuilder {
 		$data = array();
 		
 		$sql = "SELECT canvas.name as canvasName, layer.name as layerName, file.id as fileId, ";
-		$sql .= "CONCAT(canvas.name,'_',canvas.id,'/',filename) AS fileName, file.ownerId ";
+		$sql .= "CONCAT(canvas.name,'_',canvas.id,'/',filename) AS fileName ";
 		$sql .= "FROM file ";
 		$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
 		$sql .= "LEFT JOIN canvas ON (canvas.id = layer.canvasId) ";
