@@ -12,7 +12,7 @@ use modules\Address as Address;
 use modules\Alias as Alias;
 use modules\ApiKey as ApiKey;
 use modules\Avatar as Avatar;
-use modules\Booking as Booking;
+use modules\Basket as Basket;
 use modules\Canvas as Canvas;
 use modules\Canvases as Canvases;
 use modules\Close as Close;
@@ -131,24 +131,28 @@ try {
 			if ($httpMethod == "POST") {
 				$address = getParam($_POST, "address");
 				$avatar->doPost($address);
-			} else {
-				$address = getParam($_GET, "address");
-				$avatar->doGet($address);
-			}
-			break;
-		case "BOOKING":
-			$booking = new Booking($mysqli);
-			if ($httpMethod == "POST") {
-				$userId = getParam($_POST, "userId");
-				$fileIds = getParam($_POST, "fileIds", "array"); 
-				$booking->doPost($userId, $fileIds);
 			} elseif ($httpMethod == "DELETE") {
 				$userId = getParam($_POST, "userId", "int");
-				$bookingId = getParam($_POST, "bookingId", "int");
-				$booking->doDelete($userId, $bookingId);
+				$avatarId = getParam($_POST, "avatarId", "int");				
+				$avatar->doDelete($userId, $avatarId);				
 			} else {
 				$userId = getParam($_GET, "userId", "int");
-				$booking->doGet($userId);				
+				$avatar->doGet($userId);
+			}
+			break;
+		case "BASKET":
+			$basket = new Basket($mysqli);
+			if ($httpMethod == "POST") {
+				$userId = getParam($_POST, "userId", "int");
+				$fileIds = getParam($_POST, "fileIds", "array"); 
+				$basket->doPost($userId, $fileIds);
+			} elseif ($httpMethod == "DELETE") {
+				$userId = getParam($_POST, "userId", "int");
+				$basketId = getParam($_POST, "basketId", "int");
+				$basket->doDelete($userId, $basketId);
+			} else {
+				$userId = getParam($_GET, "userId", "int");
+				$basket->doGet($userId);				
 			}
 			break;			
 		case "CANVAS":
@@ -261,18 +265,20 @@ try {
 			}
 			break;
 		case "PAYMENT":
+			$config = parse_ini_file($_SERVER["DOCUMENT_ROOT"] . "/api/include/mail.smtp.ini");
 			$payment = new Payment($mysqli, $config);
 			if ($httpMethod == "POST") {		
 				$userId = getParam($_POST, "userId", "int");
 				$payment->doPost($userId);
 			} elseif ($httpMethod == "PUT") {
 				$userId = getParam($_POST, "userId", "int");
-				$bookingId = getParam($_POST, "bookingId", "array"); 
-				$payment->doPut($userId, $bookingId);				
+				$basketId = getParam($_POST, "basketId", "int"); 
+				$address = getParam($_POST, "address");				
+				$payment->doPut($userId, $basketId, $address);				
 			} elseif ($httpMethod == "DELETE") {
 				$userId = getParam($_POST, "userId", "int");
-				$bookingId = getParam($_POST, "bookingId", "array");
-				$payment->doDelete($userId, $bookingId);		
+				$basketId = getParam($_POST, "basketId", "array");
+				$payment->doDelete($userId, $basketId);		
 			} else {
 				$userId = getParam($_GET, "userId", "int");
 				$payment->doGet($userId);					

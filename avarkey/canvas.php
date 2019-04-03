@@ -82,7 +82,7 @@ $canvasId = intval($_POST["canvasId"]);
 </section>
 
 <div class="jumbotron text-center" style="margin-bottom:0">
-  <p>Copyright © EpitomeCL 2018</p>
+  <p>Copyright © EpitomeCL <?php echo date("Y"); ?></p>
 </div>
 
     <!-- Scroll to Top Button-->

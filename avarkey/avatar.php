@@ -1,3 +1,9 @@
+<?php
+
+$userId = abs(intval($_GET["userId"]));
+$userId = ($userId == 0) ? 1 : $userId;
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,6 +30,10 @@
  
 .sidebar-nav li.sidebar-nav-item.active a {color:#1d809f;}
 
+.dropzone {
+	cursor: pointer;	
+}
+
 </style>
 </head>
 <body id="page-top">
@@ -40,7 +50,7 @@
         <li class="sidebar-brand">
           <a href="index.php">Home</a>
         </li>
-		<li class="sidebar-nav-item active">
+		<li class="sidebar-nav-item">
           <a href="login.php">Login</a>
         </li>		
 		<li class="sidebar-nav-item">
@@ -50,59 +60,37 @@
           <a href="canvas.php">Management</a>
         </li>
 		<li class="sidebar-nav-item">
+          <a href="wishlist.php">Wishlist &#127873;<span class="wishlist">0</span></a>
+        </li>
+		<li class="sidebar-nav-item">
+          <a href="basket.php">Basket &#127873;<span class="basket">0</span></a>
+        </li>
+		<li class="sidebar-nav-item active">
+          <a href="avatar.php">Avatar &#127873;<span class="avatar">0</span></a>
+        </li>
+		<li class="sidebar-nav-item">
           <a href="logout.php">Logout</a>
         </li>		
       </ul>
     </nav>
 	
 <section class="home-section" id="home">
-<div class="jumbotron">
-  <h1 class="display-4">Hello, welcome to Avarkey!</h1>
-  <p class="lead">This is a simple hero unit, a creative component for calling extra attention to your crypto currency account.</p>
+<div class="jumbotron jumbotron-fluid">
+  <div class="container">
+    <h1>Your Avatars</h1>
+    <p>Change wallet addresses...</p> 
+  </div>
 </div>
 </section>
 
-<div class="container mb-3">
-	<div class="row">
-		<div class="col-lg-12 mx-auto">
-			<div class="btn-toolbar">
-				<button type="button" class="btn btn-outline-info mr-1 mb-1" data-link="apikey">Apikey</button>
-				<button type="button" class="btn btn-outline-warning mr-1 mb-1" data-link="signup">Signup</button>
-				<button type="button" class="btn btn-success mr-1 mb-1" data-link="login">Login</button>
-				<button type="button" class="btn btn-outline-secondary mr-1 mb-1" data-link="password">Forgot password</button>
-			</div>
-		</div>
+<div class="container preview mb-3">
+	<div class="card-columns">
 	</div>
-</div>
-
-<div class="container mb-3">
-<p class="text-info">
-				Gives access to backend service, open a session. 
-If user session is alive, session id will renewed. 
-Response id of current user.			</p>
-	<form method="POST" action="" class="paramset login" style="">
-		<input type="hidden" name="module" value="login">
-		<div class="card mb-3 border-info">
-			<div class="card-header">POST</div>
-			<div class="card-body">
-				<div class="form-group">
-					<label for="login_post_email">email:</label>
-					<input type="text" class="form-control" value="" placeholder="The email address as login" id="login_post_email" name="email">
-				</div>
-				<div class="form-group">
-					<label for="login_post_password">password:</label>
-					<input type="text" class="form-control" value="" placeholder="The password (string)" id="login_post_password" name="password">
-				</div>
-				<button type="button" class="btn btn-primary mt-3">Submit</button>
-			</div>
-			<div class="card-footer bg-transparent border-info"><p id="failed" class="card-text"></p></div>
-		</div>  
-	</form>
 </div>
 
 <section class="more-section" id="more">
 </section>
-	
+
 <div class="jumbotron text-center" style="margin-bottom:0">
   <p>Copyright © EpitomeCL <?php echo date("Y"); ?></p>
 </div>
@@ -112,58 +100,21 @@ Response id of current user.			</p>
       <i class="fas fa-angle-up"></i>
     </a>
 	
-<script id="canvas" type="text/x-custom-template">
-	<button type="button" class="btn btn-outline-${color} mr-1 mb-1" data-canvasid="${canvasId}" ${disabled}>
-		${canvasName}, ${counter}&#127873;
-	</button>
-</script>
-
-<script id="preview" type="text/x-custom-template">
-	<div class="card preview">
-		<img class="card-img-top" src="${src}" alt="${alt}">
+<script id="avatar" type="text/x-custom-template">
+	<div class="card preview" data-itemid="${itemId}">
+		<img class="card-img-top" src="../api/images/avatars/${src}" alt="${alt}" title="${title}">
 		<div class="card-body">
-			<h5 class="card-title">Preview ${canvasName}</h5>
-			<p class="card-text">Keep it for ${fee} ${currency}</p>
-			<a href="#" class="card-link wishlist">On the wishlist</a>
-			<a href="#" class="card-link basket">Basket</a>
+			<h5 class="card-title">Avatar ${canvasName}</h5>
+			<p class="card-text">Bought for <span class="fee">${fee}</span> ${currency}</p>
+			<form method="post" action="/api/">
+				<input type="hidden" id="avatarId" name="avatarId" value="${itemId}" />
+				<input type="hidden" id="userId" name="userId" value="<?php echo $userId; ?>" />
+				<input type="hidden" id="module" name="module" value="address" />
+				<button type="button" class="btn btn-primary address">Address</button>
+				<button type="button" class="btn btn-primary remove">&#128541;</button>
+			</form>
 		</div>
 	</div>	
-</script>
-		
-<script id="layer" type="text/x-custom-template">
-	<div class="card">
-		<div id="carousel_${layerId}" class="carousel slide" data-ride="carousel">
-		  <ol class="carousel-indicators">
-		  </ol>
-		  <div class="carousel-inner">
-		  </div>
-		  <a class="carousel-control-prev" href="#carousel_${layerId}" role="button" data-slide="prev">
-			<span class="carousel-control-prev-icon" aria-hidden="true"></span>
-			<span class="sr-only">Previous</span>
-		  </a>
-		  <a class="carousel-control-next" href="#carousel_${layerId}" role="button" data-slide="next">
-			<span class="carousel-control-next-icon" aria-hidden="true"></span>
-			<span class="sr-only">Next</span>
-		  </a>
-		</div>	
-		<div class="card-body">
-			<h5 class="card-title">${layerName}</h5>
-		</div>
-	</div>
-</script>
-
-<script id="indicator" type="text/x-custom-template">
-	<li data-target="#carousel_${layerId}" data-slide-to="${index}" class="${active}"></li>
-</script>
-
-<script id="image" type="text/x-custom-template">
-	<div class="carousel-item ${active}" data-fileid="${fileId}">
-		<img class="d-block w-100" src="${src}" alt="${alt}">
-		<div class="carousel-caption d-none d-md-block">
-			<h5>${fee} ${currency}</h5>
-			<p>${fileName}</p>
-		</div>		
-	</div>
 </script>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
@@ -171,19 +122,23 @@ Response id of current user.			</p>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
 <script type="text/javascript">
 
-function callPreview(canvasId) {
+function callPreview(itemId, fileIds) {
 	var formData = new FormData();
     formData.append('module', 'preview');
-    formData.append('canvasId', canvasId);
+    formData.append('fileIds', fileIds.join(","));
 	
 	var data = jQuery.parseJSON(JSON.stringify(Array.from(formData).reduce((o,[k,v])=>(o[k]=v,o),{})));
-	
-	requestGet(data, function(obj) {
+
+	requestPost(data, function(obj) {
 		var previewtpl = $("#preview").text();
 		var items = {
+			itemId : itemId,
 			canvasName: obj.canvas,
 			fee: obj.fee,
 			currency: obj.currency,
+			fileIds : obj.fileIds.join(","),
+			alt : obj.canvas,
+			title : obj.canvas,
 			src: obj.imageData
 		};
 
@@ -191,107 +146,119 @@ function callPreview(canvasId) {
 	});
 }
 
-function callCanvases() {
+function callPayment(userId) {
 	var formData = new FormData();
-    formData.append('module', 'canvases');
+    formData.append('module', 'payment');
+    formData.append('userId', userId);
 	
 	var data = jQuery.parseJSON(JSON.stringify(Array.from(formData).reduce((o,[k,v])=>(o[k]=v,o),{})));
-	
-	requestGet(data, function(obj){
-		var canvases = obj;
-				
-		for (var index = 0; index < canvases.length; index++) {
-			data = canvases[index];
-			
-			var canvastpl = $("#canvas").text();
-			var items = {
-				canvasId: data.id,
-				canvasName : data.name,
-				currency : data.currency,
-				counter : data.counter,
-				userId : data.userId,
-				disabled : (data.counter == 0) ? "disabled" : "",
-				color: (data.counter > 0) ? "success" : "warning"
-			};		
+
+	requestGet(data, function(obj) {
+		var paymenttpl = $("#payment").text();
+		var items = {
+			counter : obj.counter,
+			price: getPriceList(obj.price).join(", ")
+		};
+
+		$(".card-columns").append(render(paymenttpl, items));
 		
-			$(".container.canvas .btn-toolbar").append(render(canvastpl, items));
-			
-			if (index == 0) {
-				callPreview(data.id);
-				callCanvas(data.id);
-			}
-		}
-	});	
+		callBasket(userId);
+	});
 }
 
-function callCanvas(canvasId) {
+function getPriceList(obj) {
+	var price = new Array();
+	
+	$.each(obj, function(key, value) {
+		price.push("(" + value.fee + " " + value.currency + ")");
+	});
+	
+	return price;
+}
+
+function callAvatar(userId) {
 	var formData = new FormData();
-    formData.append('module', 'canvas');
-    formData.append('canvasId', canvasId);
+    formData.append('module', 'avatar');
+    formData.append('userId', userId);
 	
 	var data = jQuery.parseJSON(JSON.stringify(Array.from(formData).reduce((o,[k,v])=>(o[k]=v,o),{})));
 	
 	requestGet(data, function(obj) {
-		var layerIds = obj.layerIds;
+		var counter = obj.avatar.length;
+		
+		$(".sidebar-nav span.avatar").html(counter);
+		
+		$.each(obj.avatar, function(key, value) {
+			var avatartpl = $("#avatar").text();
+			var items = {
+				fileName : value.fileName,
+				itemId : value.id,
+				src : value.fileName,
+				alt : value.fileName,
+				title : value.fileName
+			};
 
-		for (var index = 0; index < layerIds.length; index++) {
-			callLayer(layerIds[index]);
-		}
+			$(".card-columns").append(render(avatartpl, items));
+		});
 	});
 }
 
-function callLayer(layerId) {
+function deleteAvatar(userId, avatarId) {
 	var formData = new FormData();
-    formData.append('module', 'layer');
-    formData.append('layerId', layerId);
+    formData.append('module', 'avatar');
+    formData.append('userId', userId);
+	formData.append('avatarId', avatarId);
+	formData.append('NGINX', 'DELETE');
 	
 	var data = jQuery.parseJSON(JSON.stringify(Array.from(formData).reduce((o,[k,v])=>(o[k]=v,o),{})));
 	
-	requestGet(data, function(obj){
-		var fileIds = obj.fileIds;
-		var layertpl = $("#layer").text();
-		var items = {
-			layerName: obj.name,
-			layerId : layerId,
-			layerPos : obj.position
-		};		
+	requestPost(data, function(obj) {
+		var counter = obj.avatar.length;
 		
-		$(".card-columns").append(render(layertpl, items));
-		
-		$("#carousel_" + layerId).on('slid.bs.carousel', function () {
-			updatePreview();
-		});
-		
-		for (var index = 0; index < fileIds.length; index++) {
-			callImage(layerId, fileIds[index]);
-		}
+		$(".sidebar-nav span.avatar").html(counter);
+		$(".card-columns").find("[data-itemId='" + avatarId + "']").remove();
 	});	
 }
 
-function callImage(layerId, fileId) {
+function updateWishlist(userId) {
 	var formData = new FormData();
-    formData.append('module', 'image');
-    formData.append('fileId', fileId);
+    formData.append('module', 'wishlist');
+    formData.append('userId', userId);
 	
 	var data = jQuery.parseJSON(JSON.stringify(Array.from(formData).reduce((o,[k,v])=>(o[k]=v,o),{})));
+	
+	requestGet(data, function(obj) {
+		var counter = obj.wishlist.length;
+		
+		$(".sidebar-nav span.wishlist").html(counter);
+	});
+}
 
-	requestPost(data, function(obj){
-		var index = $("#carousel_"+layerId+" div.carousel-inner").children().length;
-		var imagetpl = $("#image").text();
-		var indicatortpl = $("#indicator").text();		
-		var items = {
-			src: obj.imageData,
-			alt: obj.fileName,
-			layerId : layerId,
-			fileId : fileId,
-			fileName : obj.fileName,
-			fee : obj.fee,
-			currency : obj.currency,
-			index : index,
-			active : (index == 0) ? "active" : ""
-		};
-		$("#carousel_"+layerId+" div.carousel-inner").append(render(imagetpl, items));
-		$("#carousel_"+layerId+" ol.carousel-indicators").append(render(indicatortpl, items));
+function updateAvatar(userId) {
+	var formData = new FormData();
+    formData.append('module', 'avatar');
+    formData.append('userId', userId);
+	
+	var data = jQuery.parseJSON(JSON.stringify(Array.from(formData).reduce((o,[k,v])=>(o[k]=v,o),{})));
+	
+	requestGet(data, function(obj) {
+		var counter = obj.avatar.length;
+		
+		$(".sidebar-nav span.avatar").html(counter);
+	});
+}
+
+function updateBasket(userId) {
+	var formData = new FormData();
+    formData.append('module', 'basket');
+    formData.append('userId', userId);
+	
+	var data = jQuery.parseJSON(JSON.stringify(Array.from(formData).reduce((o,[k,v])=>(o[k]=v,o),{})));
+	
+	requestGet(data, function(obj) {
+		var counter = obj.basket.length;
+		
+		$(".sidebar-nav span.basket").html(counter);
 	});
 }
 
@@ -302,31 +269,6 @@ function render(template, items) {
 			return (index % 2 == 0) ? value : items[value];
 		})
 		.join("");	
-}
-
-function updatePreview() {
-	var fileIds = new Array();
-	$(".card-columns").find(".carousel-item.active").each(function(i, el){
-		fileIds.push($(el).data("fileid"));
-	});
-
-	var formData = new FormData();
-    formData.append('module', 'preview');
-    formData.append('fileIds', fileIds.join(","));
-	
-	var data = jQuery.parseJSON(JSON.stringify(Array.from(formData).reduce((o,[k,v])=>(o[k]=v,o),{})));
-	
-	requestPost(data, function(obj) {
-		var previewtpl = $("#preview").text();
-		var items = {
-			canvas: obj.canvas,
-			fee: obj.fee,
-			currency: obj.currency,
-			src: obj.imageData
-		};
-
-		$(".card-columns .preview").replaceWith(render(previewtpl, items));
-	});	
 }
 
 function requestGet(data, callback) {
@@ -361,46 +303,58 @@ $(document).ready(function(){
           return false;
         }
     });
+	
+	callAvatar(<?php echo $userId; ?>);
+	updateBasket(<?php echo $userId; ?>);
+	updateWishlist(<?php echo $userId; ?>);
 });
 
-$('div.card-columns').on('click', 'a.wishlist', function() {
+$('div.card-columns').on('click', 'button.payment', function() {
 	event.preventDefault();
 	event.stopPropagation();
 	
-    alert("click wishlist");
-});
+	var form = $(this).parents('form:first');
+	var card = form.closest(".card");
 
-$('div.card-columns').on('click', 'a.basket', function() {
-	event.preventDefault();
-	event.stopPropagation();
+	card.removeClass( "border-dark" ).addClass( "border-warning" );
 	
-    alert("click basket");
+	if (form.prop("method") == "post") {
+		form.find("#module").val("payment");
+		requestPost(form.serialize(), function(obj) {
+			card.removeClass( "border-warning" ).addClass( "border-success" );
+		});
+	}
 });
 
-$("div.container form.paramset").on("click", 'button', function(event) {
+$('div.card-columns').on('click', 'button.wishlist', function() {
 	event.preventDefault();
 	event.stopPropagation();
 	
 	var form = $(this).parents('form:first');
 
-	if ($("#module").val() != "") {
-		if (form.prop("method") == "post") {
-			requestPost(form.serialize(), function(obj) {
-				$(location).attr('href', "index.php");
-			});
-		}
+	if (form.prop("method") == "post") {
+		form.find("#module").val("wishlist");
+		requestPost(form.serialize(), function(obj) {
+			var counter = obj.wishlist.length;
+			
+			$(".sidebar-nav span.wishlist").html(counter);
+		});
 	}
 });
 
-$('div.container div.btn-toolbar').on('click', 'button', function() {
+$('div.card-columns').on('click', 'button.remove', function() {
 	event.preventDefault();
 	event.stopPropagation();
 	
-	var link = $(this).data("link");
+	var card = $(this).closest("div.card.preview");
+	var itemId = card.data('itemid');
 	
-	$(location).attr('href', link + ".php");
+	if (confirm('Are you sure deleting this item?')) {
+		deleteAvatar(<?php echo $userId; ?>, itemId);
+	}
 });
 </script>
+
 <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
 <script type="text/javascript">
 !function(a){"use strict";a(".menu-toggle").click(function(e){e.preventDefault(),a("#sidebar-wrapper").toggleClass("active"),a(".menu-toggle > .fa-bars, .menu-toggle > .fa-times").toggleClass("fa-bars fa-times"),a(this).toggleClass("active")}),a('a.js-scroll-trigger[href*="#"]:not([href="#"])').click(function(){if(location.pathname.replace(/^\//,"")==this.pathname.replace(/^\//,"")&&location.hostname==this.hostname){var e=a(this.hash);if((e=e.length?e:a("[name="+this.hash.slice(1)+"]")).length)return a("html, body").animate({scrollTop:e.offset().top},1e3,"easeInOutExpo"),!1}}),a("#sidebar-wrapper .js-scroll-trigger").click(function(){a("#sidebar-wrapper").removeClass("active"),a(".menu-toggle").removeClass("active"),a(".menu-toggle > .fa-bars, .menu-toggle > .fa-times").toggleClass("fa-bars fa-times")}),a(document).scroll(function(){100<a(this).scrollTop()?a(".scroll-to-top").fadeIn():a(".scroll-to-top").fadeOut()})}(jQuery);var onMapMouseleaveHandler=function(e){var a=$(this);a.on("click",onMapClickHandler),a.off("mouseleave",onMapMouseleaveHandler),a.find("iframe").css("pointer-events","none")},onMapClickHandler=function(e){var a=$(this);a.off("click",onMapClickHandler),a.find("iframe").css("pointer-events","auto"),a.on("mouseleave",onMapMouseleaveHandler)};$(".map").on("click",onMapClickHandler);

@@ -149,10 +149,9 @@ class AvatarBuilder {
 			imagecopy($avatar, $im, 0, 0, 0, 0, $width, $height);
 			imagedestroy($im);
 		}
-		
-	
+		 
 			
-			// $sql = "SELECT fileId FROM booking_file WHERE fileId IN (%d);";		
+			// $sql = "SELECT fileId FROM basket_file WHERE fileId IN (%d);";		
 			// $sql = sprintf($sql, implode(",", $fileIds));
 			// if ($result = $mysqli->query($sql)) {
 				// while ($row = $result->fetch_assoc()) {
@@ -216,9 +215,7 @@ class AvatarBuilder {
 			imagedestroy($im);
 		}
 		
-		$source = $this->prepareBackground($avatar);
-
-		return $source;
+		return $avatar;
 	}	
 }
 

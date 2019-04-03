@@ -117,7 +117,7 @@ The link is 15 min valid. After 15 min old invalid users will be delete. After c
 </section>
 	
 <div class="jumbotron text-center" style="margin-bottom:0">
-  <p>Copyright © EpitomeCL 2018</p>
+  <p>Copyright © EpitomeCL <?php echo date("Y"); ?></p>
 </div>
 
     <!-- Scroll to Top Button-->
@@ -138,7 +138,7 @@ The link is 15 min valid. After 15 min old invalid users will be delete. After c
 			<h5 class="card-title">Preview ${canvasName}</h5>
 			<p class="card-text">Keep it for ${fee} ${currency}</p>
 			<a href="#" class="card-link wishlist">On the wishlist</a>
-			<a href="#" class="card-link booking">Booking</a>
+			<a href="#" class="card-link basket">Basket</a>
 		</div>
 	</div>	
 </script>
@@ -383,11 +383,11 @@ $('div.card-columns').on('click', 'a.wishlist', function() {
     alert("click wishlist");
 });
 
-$('div.card-columns').on('click', 'a.booking', function() {
+$('div.card-columns').on('click', 'a.basket', function() {
 	event.preventDefault();
 	event.stopPropagation();
 	
-    alert("click booking");
+    alert("click basket");
 });
 
 $("div.container form.paramset").on("click", 'button', function(event) {

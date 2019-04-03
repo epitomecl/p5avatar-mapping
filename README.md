@@ -50,7 +50,7 @@ Call POST request PREVIEW
 ### Steps for buy avatar
 
 ```
-Call POST request BOOKING
+Call POST request BASKET
 Call POST request PAYMENT
 Call GET request PAYMENT
 Call PUT request PAYMENT
@@ -71,7 +71,7 @@ https://api.avarkey.com/api/
 |:wink: [ALIAS](#alias)		|:wink: [IMAGE](#image)		|:wink: [USERROLE](#userrole)		|
 |:wink: [APIKEY](#apikey)	|:wink: [LAYER](#layer)		|:wink: [SIGNUP](#signup)			|
 |:wink: [AVATAR](#avatar)	|:wink: [LOGIN](#login)		|:wink: [TITLE](#title)				|
-|:wink: [BOOKING](#booking)	|:wink: [LOGOUT](#logout)	|:wink: [UPLOAD](#upload)			|
+|:wink: [BASKET](#basket)	|:wink: [LOGOUT](#logout)	|:wink: [UPLOAD](#upload)			|
 |:wink: [CANVAS](#canvas)	|:wink: [PASSWORD](#password)|									|
 |:wink: [CANVASES](#canvases)|							|									|
 |:rage: [CLOSE](#close)		|:wink: [PAYMENT](#payment)	|									|
@@ -179,43 +179,43 @@ GET Output:
 
 <p align="right"><a href="#current-available-modules">Top</a></p>
 
-## BOOKING
+## BASKET
 
 Preparation for building an own avatar based on selected files. 
 The user selected from each layer one file with its file id.
 For instance 2, 22, 35, 56, 68, 77.
 Based on order of layer the avatar will be build after payment.
-Over the booking process selected files will be hold. 
+Over the basket process selected files will be hold. 
 These files are reserved.
 
 POST Input: 
 ```
-{module : "booking", userId : userId, fileIds : fileIds}
+{module : "basket", userId : userId, fileIds : fileIds}
 ```
 
 POST Output: 
 ```
-{"booking":[[22,35,68,56,77,2]]}
+{"basket":[[22,35,68,56,77,2]]}
 ```
 
 GET Input: 
 ```
-{module : "booking", userId : userId}
+{module : "basket", userId : userId}
 ```
 
 GET Output: 
 ```
-{"booking":[[22,35,68,56,77,2],....]}
+{"basket":[[22,35,68,56,77,2],....]}
 ```
 
 DELETE Input: 
 ```
-{module : "booking", userId : userId, position : position}
+{module : "basket", userId : userId, position : position}
 ```
 
 DELETE Output: 
 ```
-{"booking":[[22,35,68,56,77,2],....]}
+{"basket":[[22,35,68,56,77,2],....]}
 ```
 
 <p align="right"><a href="#current-available-modules">Top</a></p>
@@ -505,12 +505,12 @@ GET Output:
 User goes through the payment process.
 For instance he shopping the file ids 2, 22, 35, 56, 68, 77.
 Based on order of layer the avatar will be build after paying.
-Over the booking process selected files by this user will be marked now as owned by user. 
-These files are not selectable for an furter preview or booking process.
+Over the basket process selected files by this user will be marked now as owned by user. 
+These files are not selectable for an furter preview or basket process.
 GET gives an overview about pending processes.
 POST starts payment process.
 PUT confirm payment process.
-DELETE deleted the current booking data in case of abort by user.
+DELETE deleted the current basket data in case of abort by user.
 
 POST Input:
 ```
@@ -519,17 +519,17 @@ POST Input:
 
 POST Output: 
 ```
-{"success":true}
+{"counter":3,"items":[{"basketId":30,"currency":"EOS","fee":"0.178000000000000000","address":"address01","amount":"0.178 EOS","memo":"Proud Butterfly"},{"basketId":31,"currency":"EOS","fee":0.752,"address":"address02","amount":"0.752 EOS","memo":"miau"},{"basketId":32,"currency":"EOS","fee":0.774,"address":"address02","amount":"0.774 EOS","memo":"miau"}],"price":[{"currency":"EOS","fee":"1.704"}]}
 ```
 
 PUT Input:
 ```
-{module : "payment", userId : userId, bookingId : bookingId, address : address }
+{module : "payment", userId : userId, basketId : basketId, address : address }
 ```
 
 PUT Output: 
 ```
-{"success":true}
+{"counter":2,"items":[{"basketId":30,"currency":"EOS","fee":"0.178000000000000000","address":"address01","amount":"0.178 EOS","memo":"Proud Butterfly"},{"basketId":31,"currency":"EOS","fee":0.752,"address":"address02","amount":"0.752 EOS","memo":"miau"}]}
 ```
 
 GET Input:
@@ -539,17 +539,17 @@ GET Input:
 
 GET Output: 
 ```
-[{"fileId":22,"ownerId":1,"pending":1}, {"fileId":77,"ownerId":1,"pending":0}, ...]
+{"counter":3,"items":[{"basketId":30,"currency":"EOS","fee":"0.178000000000000000","address":"address01","amount":"0.178 EOS","memo":"Proud Butterfly"},{"basketId":31,"currency":"EOS","fee":0.752,"address":"address02","amount":"0.752 EOS","memo":"miau"},{"basketId":32,"currency":"EOS","fee":0.774,"address":"address02","amount":"0.774 EOS","memo":"miau"}],"price":[{"currency":"EOS","fee":"1.704"}]}
 ```
 
 DELETE Input:
 ```
-{module : "payment", userId : userId, bookingId : bookingId }
+{module : "payment", userId : userId, basketId : basketId }
 ```
 
 DELETE Output: 
 ```
-{"success":true}
+{"counter":2,"items":[{"basketId":30,"currency":"EOS","fee":"0.178000000000000000","address":"address01","amount":"0.178 EOS","memo":"Proud Butterfly"},{"basketId":31,"currency":"EOS","fee":0.752,"address":"address02","amount":"0.752 EOS","memo":"miau"}]}
 ```
 
 <p align="right"><a href="#current-available-modules">Top</a></p>
@@ -621,7 +621,7 @@ type always as base64 encoded png file image source delivered.
 
 POST Input:
 ```
-{module : "profile", userId : userId, firstName : firstName, lastName : lastName, alias : alias, email : email, file : file, imageData : imageData}
+{module : "profile", userId : userId, firstName : firstName, lastName : lastName, alias : alias, email : email, about : about, address : address, file : file, imageData : imageData}
 ```
 
 POST Output: 
@@ -636,7 +636,7 @@ GET Input:
 
 GET Output: 
 ```
-{"firstName":"Marian","lastName":"Kulisch","alias":"Schlaraffenland","email":"s681562@gmail.com","imageData":"data:image\/png;base64,iVBORw0KGgoAAAAN.."}
+{"firstName":"Marian","lastName":"Kulisch","alias":"Schlaraffenland","email":"s681562@gmail.com","about":"hello...","address":"", "imageData":"data:image\/png;base64,iVBORw0KGgoAAAAN.."}
 ```
 
 <p align="right"><a href="#current-available-modules">Top</a></p>

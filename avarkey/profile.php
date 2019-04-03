@@ -94,7 +94,7 @@
 </section>
 	
 <div class="jumbotron text-center" style="margin-bottom:0">
-  <p>Copyright © EpitomeCL 2018</p>
+  <p>Copyright © EpitomeCL <?php echo date("Y"); ?></p>
 </div>
 
     <!-- Scroll to Top Button-->
@@ -143,7 +143,11 @@
 						<div class="form-group">
 							<label for="profile_post_about">about:</label>
 							<textarea class="form-control" rows="5" placeholder="Something about me (string)" id="profile_post_about" name="about">${about}</textarea>
-						</div>						
+						</div>
+						<div class="form-group">
+							<label for="profile_post_address">address:</label>
+							<input type="text" class="form-control" placeholder="Wallet address (string)" id="profile_post_address" name="about" value="${address}">
+						</div>							
 						<div class="custom-file">
 							<label class="custom-file-label" for="profile_post_file">file:</label>
 							<input type="file" class="custom-file-input" placeholder="The foto upload of profile image (file)" id="profile_post_file" name="file">
@@ -185,6 +189,7 @@ function callProfile(userId) {
 			firstName : obj.firstName,
 			lastName : obj.lastName,
 			about : obj.about,
+			address : obj.address,
 			alias : obj.alias,
 			email: obj.email,
 			src : obj.imageData,

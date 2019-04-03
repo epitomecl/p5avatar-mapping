@@ -62,7 +62,10 @@ $userId = 1;
           <a href="wishlist.php">Wishlist &#127873;<span class="wishlist">0</span></a>
         </li>
 		<li class="sidebar-nav-item">
-          <a href="booking.php">Booking &#127873;<span class="booking">0</span></a>
+          <a href="basket.php">Basket &#127873;<span class="basket">0</span></a>
+        </li>
+		<li class="sidebar-nav-item">
+          <a href="avatar.php">Avatar &#127873;<span class="avatar">0</span></a>
         </li>		
 		<li class="sidebar-nav-item">
           <a href="logout.php">Logout</a>
@@ -80,7 +83,6 @@ $userId = 1;
 </section>
 
 <div class="container preview mb-3">
-	<input type="file" class="multiple" multiple="multiple" accept=".png,.gif,.jpg" style="display:none"> 
 	<div class="card-columns">
 	</div>
 </div>
@@ -89,7 +91,7 @@ $userId = 1;
 </section>
 
 <div class="jumbotron text-center" style="margin-bottom:0">
-  <p>Copyright © EpitomeCL 2018</p>
+  <p>Copyright © EpitomeCL <?php echo date("Y"); ?></p>
 </div>
 
     <!-- Scroll to Top Button-->
@@ -107,8 +109,8 @@ $userId = 1;
 				<input type="hidden" id="fileIds" name="fileIds" value="${fileIds}" />
 				<input type="hidden" id="userId" name="userId" value="<?php echo $userId; ?>" />
 				<input type="hidden" id="module" name="module" value="preview" />
-				<button type="button" class="btn btn-primary booking">Booking</button>
-				<button type="button" class="btn btn-primary remove">Delete</button>
+				<button type="button" class="btn btn-primary basket">Basket</button>
+				<button type="button" class="btn btn-primary remove">&#128541;</button>
 			</form>
 		</div>
 	</div>	
@@ -178,17 +180,31 @@ function deleteWishlist(userId, wishlistId) {
 	});	
 }
 
-function updateBooking(userId) {
+function updateBasket(userId) {
 	var formData = new FormData();
-    formData.append('module', 'booking');
+    formData.append('module', 'basket');
     formData.append('userId', userId);
 	
 	var data = jQuery.parseJSON(JSON.stringify(Array.from(formData).reduce((o,[k,v])=>(o[k]=v,o),{})));
 	
 	requestGet(data, function(obj) {
-		var counter = obj.booking.length;
+		var counter = obj.basket.length;
 		
-		$(".sidebar-nav span.booking").html(counter);
+		$(".sidebar-nav span.basket").html(counter);
+	});
+}
+
+function updateAvatar(userId) {
+	var formData = new FormData();
+    formData.append('module', 'avatar');
+    formData.append('userId', userId);
+	
+	var data = jQuery.parseJSON(JSON.stringify(Array.from(formData).reduce((o,[k,v])=>(o[k]=v,o),{})));
+	
+	requestGet(data, function(obj) {
+		var counter = obj.avatar.length;
+		
+		$(".sidebar-nav span.avatar").html(counter);
 	});
 }
 
@@ -235,21 +251,22 @@ $(document).ready(function(){
     });
 	
 	updateWishlist(<?php echo $userId; ?>);
-	updateBooking(<?php echo $userId; ?>);
+	updateBasket(<?php echo $userId; ?>);
+	updateAvatar(<?php echo $userId; ?>);
 });
 
-$('div.card-columns').on('click', 'button.booking', function() {
+$('div.card-columns').on('click', 'button.basket', function() {
 	event.preventDefault();
 	event.stopPropagation();
 	
 	var form = $(this).parents('form:first');
 
 	if (form.prop("method") == "post") {
-		form.find("#module").val("booking");
+		form.find("#module").val("basket");
 		requestPost(form.serialize(), function(obj) {
-			var counter = obj.booking.length;
+			var counter = obj.basket.length;
 			
-			$(".sidebar-nav span.booking").html(counter);
+			$(".sidebar-nav span.basket").html(counter);
 		});
 	}
 });

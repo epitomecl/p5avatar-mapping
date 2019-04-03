@@ -33,7 +33,7 @@ class Address implements JsonSerializable{
 		$mysqli = $this->mysqli;
 		$address = strip_tags(stripcslashes(trim($address)));
 		
-		$sql = "UPDATE user_avatar SET address='%s' WHERE userId=%d AND id=%d";
+		$sql = "UPDATE avatar SET address='%s' WHERE userId=%d AND id=%d";
 		$sql = sprintf($sql, $address, $userId, $avatarId);
 		if ($mysqli->query($sql) === false) {
 			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
@@ -51,7 +51,7 @@ class Address implements JsonSerializable{
 		$mysqli = $this->mysqli;
 		
 		$data = array();
-		$sql = "SELECT * FROM user_avatar WHERE userId=%d";
+		$sql = "SELECT * FROM avatar WHERE userId=%d";
 		$sql = sprintf($sql, $userId);
 		if ($result = $mysqli->query($sql)) {
 			while ($row = $result->fetch_assoc()) {

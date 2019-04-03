@@ -16,7 +16,6 @@ $userId = 1;
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,300italic,400italic,700italic" rel="stylesheet" type="text/css">
     <link href="vendor/simple-line-icons/css/simple-line-icons.css" rel="stylesheet">
-
 <style>	
 #sidebar-wrapper{position:fixed;z-index:2;right:0;width:250px;height:100%;-webkit-transition:all .4s ease 0s;transition:all .4s ease 0s;-webkit-transform:translateX(250px);transform:translateX(250px);background:#1d809f;border-left:1px solid rgba(255,255,255,.1)}.sidebar-nav{position:absolute;top:0;width:250px;margin:0;padding:0;list-style:none}.sidebar-nav li.sidebar-nav-item a{display:block;text-decoration:none;color:#fff;padding:15px}.sidebar-nav li a:hover{text-decoration:none;color:#fff;background:rgba(255,255,255,.2)}.sidebar-nav li a:active,.sidebar-nav li a:focus{text-decoration:none}.sidebar-nav>.sidebar-brand{font-size:1.2rem;background:rgba(52,58,64,.1);height:80px;line-height:50px;padding-top:15px;padding-bottom:15px;padding-left:15px}.sidebar-nav>.sidebar-brand a{color:#fff}.sidebar-nav>.sidebar-brand a:hover{color:#fff;background:0 0}#sidebar-wrapper.active{right:250px;width:250px;-webkit-transition:all .4s ease 0s;transition:all .4s ease 0s}
 
@@ -62,7 +61,10 @@ $userId = 1;
           <a href="wishlist.php">Wishlist &#127873;<span class="wishlist">0</span></a>
         </li>
 		<li class="sidebar-nav-item active">
-          <a href="booking.php">Booking &#127873;<span class="booking">0</span></a>
+          <a href="basket.php">Basket &#127873;<span class="basket">0</span></a>
+        </li>	
+		<li class="sidebar-nav-item">
+          <a href="avatar.php">Avatar &#127873;<span class="avatar">0</span></a>
         </li>		
 		<li class="sidebar-nav-item">
           <a href="logout.php">Logout</a>
@@ -73,14 +75,13 @@ $userId = 1;
 <section class="home-section" id="home">
 <div class="jumbotron jumbotron-fluid">
   <div class="container">
-    <h1>Your Basket</h1> 
+    <h1>Your basket</h1> 
     <p>Now it's time to go to cashier counter...</p> 
   </div>
 </div>
 </section>
 
 <div class="container preview mb-3">
-	<input type="file" class="multiple" multiple="multiple" accept=".png,.gif,.jpg" style="display:none"> 
 	<div class="card-columns">
 	</div>
 </div>
@@ -89,7 +90,7 @@ $userId = 1;
 </section>
 
 <div class="jumbotron text-center" style="margin-bottom:0">
-  <p>Copyright © EpitomeCL 2018</p>
+  <p>Copyright © EpitomeCL <?php echo date("Y"); ?></p>
 </div>
 
     <!-- Scroll to Top Button-->
@@ -108,7 +109,7 @@ $userId = 1;
 				<input type="hidden" id="userId" name="userId" value="<?php echo $userId; ?>" />
 				<input type="hidden" id="module" name="module" value="preview" />
 				<button type="button" class="btn btn-primary wishlist">Wishlist</button>
-				<button type="button" class="btn btn-primary remove">Delete</button>
+				<button type="button" class="btn btn-primary remove">&#128541;</button>
 			</form>
 		</div>
 	</div>	
@@ -121,7 +122,8 @@ $userId = 1;
 			<form method="post" action="/api/">
 				<input type="hidden" id="userId" name="userId" value="<?php echo $userId; ?>" />
 				<input type="hidden" id="module" name="module" value="payment" />
-				<button type="button" class="btn btn-primary payment">Buy now</button>
+				<button type="button" class="btn btn-primary donate">Donate now</button>
+				<button type="button" class="btn btn-primary buckshee">For free</button>
 			</form>
 		</div>
 	</div>
@@ -130,6 +132,9 @@ $userId = 1;
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+<script src="https://cdn.scattercdn.com/file/scatter-cdn/js/latest/scatterjs-core.min.js"></script>
+<script src="https://cdn.scattercdn.com/file/scatter-cdn/js/latest/scatterjs-plugin-eosjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/eosjs@16.0.9/lib/eos.min.js"></script>	
 <script type="text/javascript">
 
 function callPreview(itemId, fileIds) {
@@ -139,21 +144,23 @@ function callPreview(itemId, fileIds) {
 	
 	var data = jQuery.parseJSON(JSON.stringify(Array.from(formData).reduce((o,[k,v])=>(o[k]=v,o),{})));
 
-	requestPost(data, function(obj) {
-		var previewtpl = $("#preview").text();
-		var items = {
-			itemId : itemId,
-			canvasName: obj.canvas,
-			fee: obj.fee,
-			currency: obj.currency,
-			fileIds : obj.fileIds.join(","),
-			alt : obj.canvas,
-			title : obj.canvas,
-			src: obj.imageData
-		};
+	if ((fileIds.join(",")).length > 0) {
+		requestPost(data, function(obj) {
+			var previewtpl = $("#preview").text();
+			var items = {
+				itemId : itemId,
+				canvasName: obj.canvas,
+				fee: obj.fee,
+				currency: obj.currency,
+				fileIds : obj.fileIds.join(","),
+				alt : obj.canvas,
+				title : obj.canvas,
+				src: obj.imageData
+			};
 
-		$(".card-columns").prepend(render(previewtpl, items));
-	});
+			$(".card-columns").prepend(render(previewtpl, items));
+		});
+	}
 }
 
 function callPayment(userId) {
@@ -172,7 +179,7 @@ function callPayment(userId) {
 
 		$(".card-columns").append(render(paymenttpl, items));
 		
-		callBooking(userId);
+		callBasket(userId);
 	});
 }
 
@@ -186,38 +193,38 @@ function getPriceList(obj) {
 	return price;
 }
 
-function callBooking(userId) {
+function callBasket(userId) {
 	var formData = new FormData();
-    formData.append('module', 'booking');
+    formData.append('module', 'basket');
     formData.append('userId', userId);
 	
 	var data = jQuery.parseJSON(JSON.stringify(Array.from(formData).reduce((o,[k,v])=>(o[k]=v,o),{})));
 	
 	requestGet(data, function(obj) {
-		var counter = obj.booking.length;
+		var counter = obj.basket.length;
 		
-		$(".sidebar-nav span.booking").html(counter);
+		$(".sidebar-nav span.basket").html(counter);
 		
-		$.each(obj.booking, function(key, value) {
+		$.each(obj.basket, function(key, value) {
 			callPreview(value.id, value.fileIds);
 		});
 	});
 }
 
-function deleteBooking(userId, bookingId) {
+function deleteBasket(userId, basketId) {
 	var formData = new FormData();
-    formData.append('module', 'booking');
+    formData.append('module', 'basket');
     formData.append('userId', userId);
-	formData.append('bookingId', bookingId);
+	formData.append('basketId', basketId);
 	formData.append('NGINX', 'DELETE');
 	
 	var data = jQuery.parseJSON(JSON.stringify(Array.from(formData).reduce((o,[k,v])=>(o[k]=v,o),{})));
 	
 	requestPost(data, function(obj) {
-		var counter = obj.booking.length;
+		var counter = obj.basket.length;
 		
-		$(".sidebar-nav span.booking").html(counter);
-		$(".card-columns").find("[data-itemId='" + bookingId + "']").remove();
+		$(".sidebar-nav span.basket").html(counter);
+		$(".card-columns").find("[data-itemId='" + basketId + "']").remove();
 		
 		updatePayment(userId);
 	});	
@@ -253,6 +260,40 @@ function updateWishlist(userId) {
 		
 		$(".sidebar-nav span.wishlist").html(counter);
 	});
+}
+
+function updateAvatar(userId) {
+	var formData = new FormData();
+    formData.append('module', 'avatar');
+    formData.append('userId', userId);
+	
+	var data = jQuery.parseJSON(JSON.stringify(Array.from(formData).reduce((o,[k,v])=>(o[k]=v,o),{})));
+	
+	requestGet(data, function(obj) {
+		var counter = obj.avatar.length;
+		
+		$(".sidebar-nav span.avatar").html(counter);
+	});
+}
+
+function proceedPayment(userId, basketId) {
+	var formData = new FormData();
+    formData.append('module', 'payment');
+    formData.append('userId', userId);
+	formData.append('basketId', basketId);
+	formData.append('NGINX', 'PUT');
+	
+	var data = jQuery.parseJSON(JSON.stringify(Array.from(formData).reduce((o,[k,v])=>(o[k]=v,o),{})));
+	
+	requestPost(data, function(obj) {
+		var counter = obj.counter;
+		
+		$(".sidebar-nav span.basket").html(counter);
+		$(".card-columns").find("[data-itemId='" + basketId + "']").remove();
+		
+		updatePayment(userId);
+		updateAvatar(userId);
+	});	
 }
 
 function render(template, items) {
@@ -299,9 +340,10 @@ $(document).ready(function(){
 	
 	callPayment(<?php echo $userId; ?>);
 	updateWishlist(<?php echo $userId; ?>);
+	updateAvatar(<?php echo $userId; ?>);
 });
 
-$('div.card-columns').on('click', 'button.payment', function() {
+$('div.card-columns').on('click', 'button.buckshee', function() {
 	event.preventDefault();
 	event.stopPropagation();
 	
@@ -313,9 +355,111 @@ $('div.card-columns').on('click', 'button.payment', function() {
 	if (form.prop("method") == "post") {
 		form.find("#module").val("payment");
 		requestPost(form.serialize(), function(obj) {
+			$.each(obj.items, function(key, item) {
+				let basketId = item.basketId;
+				let accountName = item.address; // 'designerAccount'
+				let amount = item.amount; // '1.0000 EOS'
+				let memo = item.memo; // 'avarkey canvas name';
+						
+				//console.log(basketId + " :: " + accountName + " :: " + amount + " :: " + memo);
+				
+				proceedPayment(<?php echo $userId; ?>, basketId);
+			});
+			
 			card.removeClass( "border-warning" ).addClass( "border-success" );
 		});
 	}
+});
+
+$('div.card-columns').on('click', 'button.donate', function() {
+	event.preventDefault();
+	event.stopPropagation();
+	
+	var form = $(this).parents('form:first');
+	var card = form.closest(".card");
+
+	// Don't forget to tell ScatterJS which plugins you are using.
+	ScatterJS.plugins( new ScatterEOS() );
+
+	// Networks are used to reference certain blockchains.
+	// They let you get accounts and help you build signature providers.
+	const network = {
+		blockchain:'eos',
+		protocol:'https',
+		host:'nodes.get-scatter.com',
+		port:443,
+		chainId:'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906'
+	}
+
+	// First we need to connect to the user's Scatter.
+	ScatterJS.scatter.connect('Avarkey').then(connected => {
+
+		// If the user does not have Scatter or it is Locked or Closed this will return false;
+		if(!connected) return false;
+
+		const scatter = ScatterJS.scatter;
+
+		// Now we need to get an identity from the user.
+		// We're also going to require an account that is connected to the network we're using.
+		const requiredFields = { accounts:[network] };
+		scatter.getIdentity(requiredFields).then(() => {
+
+			// Always use the accounts you got back from Scatter. Never hardcode them even if you are prompting
+			// the user for their account name beforehand. They could still give you a different account.
+			const account = scatter.identity.accounts.find(x => x.blockchain === 'eos');
+
+			// You can pass in any additional options you want into the eosjs reference.
+			const eosOptions = { expireInSeconds:60 };
+
+			// Get a proxy reference to eosjs which you can use to sign transactions with a user's Scatter.
+			const eos = scatter.eos(network, Eos, eosOptions);
+
+			// ----------------------------
+			// Now that we have an identity,
+			// an EOSIO account, and a reference
+			// to an eosjs object we can send a transaction.
+			// ----------------------------
+
+
+			// Never assume the account's permission/authority. Always take it from the returned account.
+			const transactionOptions = { authorization:[`${account.name}@${account.authority}`] };
+
+			card.removeClass( "border-dark" ).addClass( "border-warning" );
+			
+			if (form.prop("method") == "post") {
+				form.find("#module").val("payment");
+				requestPost(form.serialize(), function(obj) {
+					$.each(obj.items, function(key, item) {
+						let basketId = item.basketId;						
+						let accountName = item.address; // 'designerAccount'
+						let amount = item.amount; // '1.0000 EOS'
+						let memo = item.memo; // 'avarkey canvas name';
+						
+						if (accountName != "") {
+							eos.transfer(account.name, accountName, amount, memo, transactionOptions).then(trx => {
+								// That's it!
+								console.log(`Transaction ID: ${trx.transaction_id}`);
+							
+								proceedPayment(<?php echo $userId; ?>, basketId);
+							}).catch(error => {
+								console.error(error);
+								
+								proceedPayment(<?php echo $userId; ?>, basketId);
+							});
+						} else {
+							proceedPayment(<?php echo $userId; ?>, basketId);
+						}
+					});
+					
+					card.removeClass( "border-warning" ).addClass( "border-success" );
+				});
+			}			
+			
+		}).catch(error => {
+			// The user rejected this request, or doesn't have the appropriate requirements.
+			console.error(error);
+		});
+	});
 });
 
 $('div.card-columns').on('click', 'button.wishlist', function() {
@@ -342,7 +486,7 @@ $('div.card-columns').on('click', 'button.remove', function() {
 	var itemId = card.data('itemid');
 	
 	if (confirm('Are you sure deleting this item?')) {
-		deleteBooking(<?php echo $userId; ?>, itemId);
+		deleteBasket(<?php echo $userId; ?>, itemId);
 	}
 });
 </script>

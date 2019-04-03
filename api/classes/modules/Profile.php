@@ -172,10 +172,11 @@ class Profile {
 	* @param string $alias The alias name as designer
 	* @param string $email The email of user
 	* @param string $about Something about me, the user
-	* @param file $file The foto upload of profile image
+	* @param string $about Something about me, the user
+	* @param string $address The address of wallet
 	* @param string $imageData The imageData by json foto upload
 	*/		
-	public function doPost($profileId, $firstName, $lastName, $alias, $email, $about, $file, $imageData) {
+	public function doPost($profileId, $firstName, $lastName, $alias, $email, $about, $address, $file, $imageData) {
 		$mysqli = $this->mysqli;
 		$id = 0;
 		$path = realpath(dirname(__FILE__).'/../../images/profiles')."/";		
@@ -203,11 +204,12 @@ class Profile {
 		$alias = $mysqli->real_escape_string($alias);
 		$email = $mysqli->real_escape_string($email);
 		$about = $mysqli->real_escape_string($about);
+		$address = $mysqli->real_escape_string($address);
 		
 		$sql = "UPDATE profile SET firstName='%s', lastName='%s', alias='%s', ";
-		$sql .= "email='%s', about='%s' ";
+		$sql .= "email='%s', about='%s', address='%s' ";
 		$sql .= "WHERE id=%d";
-		$sql = sprintf($sql, $firstName, $lastName, $alias, $email, $about, $profileId);
+		$sql = sprintf($sql, $firstName, $lastName, $alias, $email, $about, $address, $profileId);
 			
 		if (!empty($photo)) {
 			if (strlen($fileName) > 0 && is_file($path.$fileName)) {
@@ -215,9 +217,9 @@ class Profile {
 			}
 				
 			$sql = "UPDATE profile SET firstName='%s', lastName='%s', alias='%s', ";
-			$sql .= "email='%s', about='%s', photo='%s' ";
+			$sql .= "email='%s', about='%s', address='%s', photo='%s' ";
 			$sql .= "WHERE id=%d";
-			$sql = sprintf($sql, $firstName, $lastName, $alias, $email, $about, $photo, $profileId);
+			$sql = sprintf($sql, $firstName, $lastName, $alias, $email, $about, $address, $photo, $profileId);
 		}
 		
 		if ($mysqli->query($sql) === false) {
@@ -252,6 +254,7 @@ class Profile {
 				$alias = trim($row["alias"]);
 				$email = trim($row["email"]); 
 				$about = trim($row["about"]);
+				$address = trim($row["address"]);				
 				$fileName = trim($row["photo"]);
 			}
 		} else {
@@ -269,6 +272,7 @@ class Profile {
 		$obj->alias = $alias; 
 		$obj->email = $email;
 		$obj->about = $about;
+		$obj->address = $address;		
 		$obj->imageData = $this->getPngDataFromFile($path, $fileName);
 		
 		echo json_encode($obj, JSON_UNESCAPED_UNICODE);			
@@ -283,6 +287,7 @@ class Profile {
 		$alias = ""; 
 		$email = "";
 		$about = "";
+		$address = "";
 		$fileName = "";
 		
 		$sql = sprintf("SELECT * FROM profile WHERE id = %d", $profileId);
@@ -294,6 +299,7 @@ class Profile {
 				$alias = trim($row["alias"]);
 				$email = trim($row["email"]); 
 				$about = trim($row["about"]);
+				$address = trim($row["address"]);				
 				$fileName = trim($row["photo"]);
 			}
 		} else {
@@ -311,6 +317,7 @@ class Profile {
 		$obj->alias = $alias; 
 		$obj->email = $email;
 		$obj->about = $about;
+		$obj->address = $address;		
 		$obj->imageData = $this->getPngDataFromFile($path, $fileName);
 		
 		return $obj;			

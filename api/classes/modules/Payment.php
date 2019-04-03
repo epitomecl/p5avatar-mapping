@@ -2,7 +2,6 @@
 namespace modules;
 
 use \common\AvatarBuilder as AvatarBuilder;
-use \JsonSerializable as JsonSerializable;
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -15,23 +14,17 @@ require_once __DIR__.'/../common/PHPMailer/src/SMTP.php';
 * User goes through the payment process.
 * For instance he shopping the file ids 2, 22, 35, 56, 68, 77.
 * Based on order of layer the avatar will be build after paying.
-* Over the booking process selected files by this user will be marked now as owned by user. 
-* These files are not selectable for an furter preview or booking process.
+* Over the basket process selected files by this user will be marked now as owned by user. 
+* These files are not selectable for an furter preview or basket process.
 * GET gives an overview about pending processes.
 * POST starts payment process.
 * PUT confirm payment process.
-* DELETE deleted the current booking data in case of abort by user.
+* DELETE deleted the current basket data in case of abort by user.
 * 
 */
 class Payment {
 	private $mysqli;
 	private $smtpConfig;
-	
-	public function jsonSerialize() {
-		return array(
-			'success' => true
-        );
-    }
 	
 	/**
 	* something describes this method
@@ -49,27 +42,27 @@ class Payment {
 	public function doPost($userId) {
 		$mysqli = $this->mysqli;		
 
-		$bookingIds = array();
-		$sql = "SELECT id FROM booking WHERE userId=%d;";		
+		$basketIds = array();
+		$sql = "SELECT id FROM basket WHERE userId=%d;";		
 		$sql = sprintf($sql, $userId);
 		if ($result = $mysqli->query($sql)) {
 			while ($row = $result->fetch_assoc()) {
-				array_push($bookingIds, intval($row["id"]));
+				array_push($basketIds, intval($row["id"]));
 			}
 		} else {
 			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
 		}
 		
 		$data = array();
-		foreach ($bookingIds as $index => $bookingId) {		
-			$sql = "SELECT booking_file.id, booking_file.fileId, fee, currency FROM booking_file ";
-			$sql .= "LEFT JOIN booking ON (booking.id = booking_file.bookingId) ";		
-			$sql .= "LEFT JOIN file ON (file.id = booking_file.fileId) ";
+		foreach ($basketIds as $index => $basketId) {		
+			$sql = "SELECT basket_file.id, basket_file.fileId, fee, currency FROM basket_file ";
+			$sql .= "LEFT JOIN basket ON (basket.id = basket_file.basketId) ";		
+			$sql .= "LEFT JOIN file ON (file.id = basket_file.fileId) ";
 			$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
 			$sql .= "LEFT JOIN canvas ON (canvas.id = layer.canvasId) ";
-			$sql .= "WHERE booking.userId=%d AND booking_file.bookingId=%d ";	
+			$sql .= "WHERE basket.userId=%d AND basket_file.basketId=%d ";	
 			$sql .= "ORDER BY layer.position;";
-			$sql = sprintf($sql, $userId, $bookingId);
+			$sql = sprintf($sql, $userId, $basketId);
 			if ($result = $mysqli->query($sql)) {
 				if ($row = $result->fetch_assoc()) {
 					array_push($data, $row);
@@ -80,47 +73,54 @@ class Payment {
 		}
 		// todo something with data
 		
-		echo json_encode($this, JSON_UNESCAPED_UNICODE);
+		$this->doGet($userId);
 	}
 	
 	/**
 	* something describes this method
 	*
 	* @param int $userId The id of current user	
-	* @param int $bookingId The id of booking
+	* @param int $basketId The id of basket
 	* @param string $address The address of a wallet		
 	*/		
-	public function doPut($userId, $bookingId, $address) {
+	public function doPut($userId, $basketId, $address) {
 		$mysqli = $this->mysqli;		
 		
 		$ids = array();
-		$sql = "SELECT booking_file.id, booking_file.fileId, fee, currency FROM booking_file ";
-		$sql .= "LEFT JOIN booking ON (booking.id = booking_file.bookingId) ";		
-		$sql .= "LEFT JOIN file ON (file.id = booking_file.fileId) ";
+		$sql = "SELECT basket_file.id, basket_file.fileId, fee, currency FROM basket_file ";
+		$sql .= "LEFT JOIN basket ON (basket.id = basket_file.basketId) ";		
+		$sql .= "LEFT JOIN file ON (file.id = basket_file.fileId) ";
 		$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
 		$sql .= "LEFT JOIN canvas ON (canvas.id = layer.canvasId) ";
-		$sql .= "WHERE booking.userId=%d AND booking_file.bookingId=%d ";	
+		$sql .= "WHERE basket.userId=%d AND basket_file.basketId=%d ";	
 		$sql .= "ORDER BY layer.position;";
-		$sql = sprintf($sql, $userId, $bookingId);
+		$sql = sprintf($sql, $userId, $basketId);
 		if ($result = $mysqli->query($sql)) {
-			if ($row = $result->fetch_assoc()) {
+			while ($row = $result->fetch_assoc()) {
 				array_push($ids, intval($row["fileId"]));
 			}
 		} else {
 			throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
 		}		
-		$this->removeBooking($mysqli, $userId, $bookingId);
-
+		
+		if (count($ids) == 0) {
+			throw new Exception(sprintf("%s, %s", get_class($this), 'Not Acceptable'.$basketId), 406);
+		}
+		
+		$data = $this->getCanvasData($mysqli, $basketId) ;
+		$width = $data->width;
+		$height = $data->height;
+		
 		$builder = new AvatarBuilder();
-		$image = $builder->getAvatarImageSource($mysqli, $ids);
+		$image = $builder->getAvatarImageSource($mysqli, $ids, $width, $height);
 		$path = realpath(dirname(__FILE__).'/../../images/avatars')."/";
-		$fileName = sprintf("%s.%s", md5($userId.time()), "png");
+		$fileName = sprintf("%s.%s", md5($userId.time()), "jpg");
 
 		if (!file_exists($path)) {
 			mkdir($path, 0777, true);
 		}
 		
-		imagepng($image, $path.$fileName);
+		imagejpeg($image, $path.$fileName, 75);
 		imagedestroy($image);
 
 		if (file_exists($path.$fileName)) {
@@ -128,7 +128,7 @@ class Payment {
 			$sql = "INSERT INTO avatar SET userId=%d, address='%s', filename='%s', modified=NOW()";
 			$sql = sprintf($sql, $userId, $address, $fileName);
 			if ($mysqli->query($sql) === false) {
-				throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+				throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
 			} else {
 				$avatarId = $mysqli->insert_id;
 			}			
@@ -138,28 +138,35 @@ class Payment {
 					$sql = "INSERT INTO avatar_file SET avatarId=%d, fileId=%d, modified=NOW();";
 					$sql = sprintf($sql, $avatarId, $fileId);
 					if ($mysqli->query($sql) === false) {
-						throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
+						throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
 					}
 				}
 			}
+			$this->removeBasket($mysqli, $userId, $basketId);
 			
+			if ($this->nothing2buy($mysqli, $userId)) {
+				$email = $this->getEmail($mysqli, $userId);
+				if (!empty($email) && strlen($email) > 0) {
+					$this->sendEmail($email, $userId);
+				}
+			}
 		}
 		
-		echo json_encode($this, JSON_UNESCAPED_UNICODE);
+		$this->doGet($userId);
 	}
 	
 	/**
 	* something describes this method
 	*
 	* @param int $userId The id of current user	
-	* @param int $bookingId The id of booking
+	* @param int $basketId The id of basket
 	*/		
-	public function doDelete($userId, $bookingId) {
+	public function doDelete($userId, $basketId) {
 		$mysqli = $this->mysqli;	
 		
-		$this->removeBooking($mysqli, $userId, $bookingId);
+		$this->removeBasket($mysqli, $userId, $basketId);
 		
-		echo json_encode($this, JSON_UNESCAPED_UNICODE);		
+		$this->doGet($userId);		
 	}
 
 	/**
@@ -170,60 +177,89 @@ class Payment {
 	public function doGet($userId) {
 		$mysqli = $this->mysqli;	
 		
-		$bookingIds = array();
-		$sql = "SELECT id FROM booking WHERE userId=%d;";		
+		$basketIds = array();
+		$sql = "SELECT id FROM basket WHERE userId=%d;";		
 		$sql = sprintf($sql, $userId);
 		if ($result = $mysqli->query($sql)) {
 			while ($row = $result->fetch_assoc()) {
-				array_push($bookingIds, intval($row["id"]));
+				array_push($basketIds, intval($row["id"]));
 			}
 		} else {
 			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
 		}
 		
-		$price = array();
-		foreach ($bookingIds as $index => $bookingId) {		
-			$sql = "SELECT booking_file.id, booking_file.fileId, fee, currency FROM booking_file ";
-			$sql .= "LEFT JOIN booking ON (booking.id = booking_file.bookingId) ";		
-			$sql .= "LEFT JOIN file ON (file.id = booking_file.fileId) ";
+		$items = array();
+		foreach ($basketIds as $index => $basketId) {		
+			$sql = "SELECT basket_file.id, basket_file.fileId, fee, currency, ";
+			$sql .= "canvas.name as memo, profile.address ";
+			$sql .= "FROM basket_file ";
+			$sql .= "LEFT JOIN basket ON (basket.id = basket_file.basketId) ";		
+			$sql .= "LEFT JOIN file ON (file.id = basket_file.fileId) ";
+			$sql .= "LEFT JOIN profile ON (file.userId = profile.userId) ";		
 			$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
 			$sql .= "LEFT JOIN canvas ON (canvas.id = layer.canvasId) ";
-			$sql .= "WHERE booking.userId=%d AND booking_file.bookingId=%d ";	
+			$sql .= "WHERE basket.userId=%d AND basket_file.basketId=%d ";	
 			$sql .= "ORDER BY layer.position;";
-			$sql = sprintf($sql, $userId, $bookingId);
+			$sql = sprintf($sql, $userId, $basketId);
 			if ($result = $mysqli->query($sql)) {
+				$item = NULL;
 				if ($row = $result->fetch_assoc()) {
 					$currency = trim($row["currency"]);
 					$fee = $row["fee"];
-					
-					if (array_key_exists($currency, $price)) {
-						$price[$currency] = $price[$currency] + $fee;
-					} else {
-						$price[$currency] = $fee;						
-					}
+					$amount = sprintf("%s %s", rtrim($fee, "0"), $currency);
+					$memo = trim($row["memo"]);
+					$address = trim($row["address"]);
+					$item = new \stdClass();
+					$item->basketId = $basketId;
+					$item->currency = $currency;
+					$item->fee = $fee;
+					$item->address = $address;
+					$item->amount = $amount;
+					$item->memo = $memo;
+					array_push($items, $item);
 				}
+				while ($row = $result->fetch_assoc()) {
+					if (isset($item)) {
+						$item->fee += $row["fee"];
+						$fee = $item->fee;
+						$currency = $item->currency;
+						$amount = sprintf("%s %s", rtrim($fee, "0"), $currency);
+						$item->amount = $amount;
+					}
+				}		
 			} else {
 				throw new Exception(sprintf("%s, %s", get_class($this), $mysqli->error), 507);
 			}
 		}
 		
+		// array of several currencies and their total fees
+		$price = array();
+		foreach ($items as $item) {
+			$currency = $item->currency;
+			$fee = $item->fee;
+			if (array_key_exists($currency, $price)) {
+				$price[$currency] = $price[$currency] + $fee;
+			} else {
+				$price[$currency] = $fee;						
+			}
+		}
 		
 		$obj = new \stdClass();
-		$obj->counter = count($bookingIds);
+		$obj->counter = count($basketIds);
+		$obj->items = $items;
 		$obj->price = $this->getObjectPrice($price);
 		
 		echo json_encode($obj, JSON_UNESCAPED_UNICODE);		
 	}
 	
-	private function sendEmail($email, $address) {
+	private function sendEmail($email, $userId) {
 		$config = $this->smtpConfig;
-		$address = (strlen($address) > 0) ? $address : "&#128165;&#128165;&#128165;&#128165;";
 		$to = $email;
 		$from = "marian@epitomecl.com";
 		$module = strtolower("AVATAR");
-		$subject = "YOUR AVATAR IS BONDED";
-		$url = $this->siteURL()."api/?module=$module&address=$address";
-		$link = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+		$subject = "YOUR AVATAR IS HERE";
+		$url = $this->siteURL();
+		$link = $url.sprintf("api.avarkey.com/avarkey/%s.php?userId=%d", $module, $userId);
 		$body = "<!DOCTYPE html>";
 		$body .= "<html>";
 		$body .= "<head><meta charset='charset=utf-8'>";
@@ -231,9 +267,8 @@ class Payment {
 		$body .= "<body>";
 		$body .= "<h4>Thank you for using AVARKEY!</h4>";
 		$body .= "<p>If you want to change bonded address, then go into your account and adjust the address again.</p>";
-		$body .= "<p>Follow this link above and fetch every time your personal avatar.</p>";
-		$body .= "<p>Bonded address: $address</p>";
-		$body .= "<p>External link: <a href='".$link."' target='_blank'>".$address."</a></p>";
+		$body .= "<p>Follow this link above and adjust personal avatar address.</p>";
+		$body .= "<p>External link: <a href='".$link."' target='_blank'>".$link."</a></p>";
 		$body .= "<p>Browser link: ".$link."</p>";
 		$body .= "<p>Best regards.</p>";
 		$body .= "<p>Avarkey</p>";
@@ -252,6 +287,9 @@ class Payment {
 			$mail->SMTPSecure = 'tls';          // Enable TLS encryption, `ssl` also accepted
 			$mail->Port = $config['PORT'];      // TCP port to connect to
 
+			$mail->CharSet = 'UTF-8';
+			$mail->Encoding = 'base64';
+			
 			//Recipients
 			$mail->setFrom($from, 'Avarkey');
 			$mail->addAddress($to);
@@ -263,40 +301,99 @@ class Payment {
 			$mail->AltBody = $this->cleanup(array("</title>", "</h4>", "</p>"), $body);
 
 			$mail->send();
-			$this->errorMsg = 'Message has been sent.';
-			$this->errorCode = 0;
 		} catch (Exception $e) {
-			$this->errorMsg = 'Message could not be sent. Mailer Error: '. $mail->ErrorInfo;
-			$this->errorCode = 96;
-			
-			throw new Exception($e->getMessage(), 406);
+			throw new Exception(sprintf("%s, %s", get_class($this), 'Message could not be sent. Mailer Error: '. $mail->ErrorInfo), 406);
 		}
 	}
 
-	private function removeBooking($mysqli, $userId, $bookingId) {
-		$bookingIds = array();
+	private function nothing2buy($mysqli, $userId) {
+		$basketIds = array();
 		
-		$sql = "SELECT id FROM booking WHERE userId=%d;";	
+		$sql = "SELECT id FROM basket WHERE userId=%d;";	
 		$sql = sprintf($sql, $userId);
 		if ($result = $mysqli->query($sql)) {
 			while ($row = $result->fetch_assoc()) {
-				array_push($bookingIds, intval($row["id"]));
+				array_push($basketIds, intval($row["id"]));
 			}
 		} else {
 			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
 		}
 		
-		$sql = "DELETE FROM booking_file WHERE bookingId IN (%s) AND bookingId=%d;";
-		$sql = sprintf($sql, implode(",", $bookingIds), $bookingId);
+		return count($basketIds) == 0;
+	}
+	
+	private function getEmail($mysqli, $userId) {
+		$email = "";
+		
+		$sql = "SELECT email FROM profile WHERE userId=%d;";	
+		$sql = sprintf($sql, $userId);
+		if ($result = $mysqli->query($sql)) {
+			while ($row = $result->fetch_assoc()) {
+				$email = trim($row["email"]);
+			}
+		} else {
+			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
+		}
+		
+		return $email;
+	}
+	
+	private function removeBasket($mysqli, $userId, $basketId) {
+		$basketIds = array();
+		
+		$sql = "SELECT id FROM basket WHERE userId=%d;";	
+		$sql = sprintf($sql, $userId);
+		if ($result = $mysqli->query($sql)) {
+			while ($row = $result->fetch_assoc()) {
+				array_push($basketIds, intval($row["id"]));
+			}
+		} else {
+			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
+		}
+		
+		$sql = "DELETE FROM basket_file WHERE basketId IN (%s) AND basketId=%d;";
+		$sql = sprintf($sql, implode(",", $basketIds), $basketId);
 		if ($mysqli->query($sql) === false) {
 			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
 		}
 		
-		$sql = "DELETE FROM booking WHERE userId=%d AND id=%d;";
-		$sql = sprintf($sql, $userId, $bookingId);
+		$sql = "DELETE FROM basket WHERE userId=%d AND id=%d;";
+		$sql = sprintf($sql, $userId, $basketId);
 		if ($mysqli->query($sql) === false) {
 			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
 		}
+	}
+	
+	private function getCanvasData($mysqli, $basketId) {
+		$data = array();
+		
+		$sql = "SELECT canvas.name, width, height, currency FROM basket ";
+		$sql .= "LEFT JOIN basket_file ON (basket_file.basketId = basket.id) ";
+		$sql .= "LEFT JOIN file ON (file.id = basket_file.fileId) ";
+		$sql .= "LEFT JOIN layer ON (layer.id = file.layerId) ";
+		$sql .= "lEFT JOIN canvas ON (canvas.id = layer.canvasId) ";
+		$sql .= "WHERE basket.id=%d;";
+		$sql = sprintf($sql, $basketId);
+
+		if ($result = $mysqli->query($sql)) {
+			while ($row = $result->fetch_assoc()) {
+				array_push($data, $row);
+			}
+		} else {
+			throw new Exception(sprintf("%s, %s", get_class($this), $sql.$mysqli->error), 507);
+		}
+		
+		if (empty($data)) {
+			throw new Exception(sprintf("%s, %s", get_class($this), 'Not Found'), 404);			
+		}	
+		
+		$obj = new \stdClass();
+		$obj->name = trim($data[0]["name"]);
+		$obj->width = intval($data[0]["width"]);
+		$obj->height = intval($data[0]["height"]);
+		$obj->currency = trim($data[0]["currency"]);
+		
+		return $obj;
 	}
 	
 	private function getObjectPrice($price) {
@@ -305,7 +402,7 @@ class Payment {
 		foreach ($price as $key => $value) {
 			$obj = new \stdClass();
 			$obj->currency = $key;
-			$obj->fee = $value;
+			$obj->fee = rtrim($value, "0");
 			
 			array_push($data, $obj);
 		}
